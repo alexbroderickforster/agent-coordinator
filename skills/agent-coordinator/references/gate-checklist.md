@@ -2,6 +2,14 @@
 
 Read production yourself for each item. "The requester said so" is not verification. The commands are Google Cloud Run examples; use the same checks on any platform.
 
+## Make it enforceable, not just agreed
+The coordinator is a process; it only stops agents that ask. Agents that don't (a teammate's, a forgotten checkout, a CI job) are stopped only by guards in the deploy path itself. Recommend these to the owner for every service several people deploy:
+- **Deploy only from CI on merged main.** Remove or restrict local deploy credentials, so the host refuses manual or CLI deploys where it can.
+- **Freshness check in deploy scripts:** refuse to deploy when HEAD is behind origin/main or the tree is dirty, with an explicit override flag.
+- **Build stamp:** each deploy publishes its commit, and whether CI built it, at a known URL (e.g. `/build.json`). Monitoring alerts when live isn't a CI build of main.
+- **Smoke checks on the pages that matter** (pricing, checkout, key pages), so a rollback-by-stale-deploy pages someone within minutes.
+A guard added to the repo doesn't protect checkouts that predate it. Server-side restrictions do.
+
 ## Every request must contain
 1. What changes, which service/job/data, and why (issue/PR link).
 2. What else ships: commits between the live revision's source and the build (`git log <live-sha>..<new-sha> -- <service path>`).

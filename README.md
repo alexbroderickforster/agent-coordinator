@@ -141,6 +141,7 @@ skills/agent-coordinator/
 - **Record rollback floors.** After a change wrote a new cookie format, rolling back past it would have signed out every user.
 - **Promote by revision name, after a fresh read.** Two agents raced to promote the same service.
 - **Second run must change nothing.** For scheduled jobs, the second run after a change proves there's no churn.
+- **Deploy only from CI, on fresh main.** An agent shipped two small edits from a weeks-old local checkout, and the deploy replaced the whole live site, wiping a teammate's work days before an event.
 - **Time comes from `date -u`.** A guessed clock time once led to a false accusation of an unapproved deploy.
 
 ## Requirements and assumptions
@@ -153,7 +154,7 @@ skills/agent-coordinator/
 
 ## Safety notes
 
-- The coordinator is a process, not a sandbox. It can't stop an agent that ignores the rule. The audit-log watcher catches changes made without a GO, and the line in CLAUDE.md/AGENTS.md makes the rule hard to miss.
+- The coordinator is a process, not a sandbox. It can't stop an agent that never asks, such as a teammate's agent, an old checkout or a CI job. Pair it with guards in the deploy path itself: deploy only from CI on merged main, a freshness check in deploy scripts, a build stamp plus monitoring. `gate-checklist.md` has the list. The audit-log watcher catches changes made without a GO, and the line in CLAUDE.md/AGENTS.md makes the rule hard to miss.
 - Starting sessions with `--dangerously-skip-permissions` / Codex's bypass flag is your call. It removes per-command prompts, and safety then rests on the GO process and each kickoff's rules. `setup.md` covers the trade-off.
 - Keep secrets and personal data out of terminal messages, mailbox files and GitHub comments. The skill tells agents to report counts only.
 
