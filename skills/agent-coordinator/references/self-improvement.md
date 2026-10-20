@@ -32,7 +32,7 @@ When a lesson would help any project, not just this one:
    - a new line in `references/lessons.md`;
    - a checklist item in `references/gate-checklist.md`, if it's a check;
    - a doc or script fix, if something was wrong or missing.
-3. **Ask the owner:** show the scrubbed text and where it goes. It's a public post, so it needs their OK.
+3. **Ask the owner:** show the scrubbed text and where it goes. It's a public post, so it needs their OK. The owner may give standing permission for **small fixes** (a lesson line, a checklist item, a doc correction, a script bug fix). Then push those and tell them afterwards in one line. Still ask first for bigger changes: new features, changed defaults, or anything that changes how other people's coordinators behave. Record the owner's choice in `.coordinator/lessons.md` so the next coordinator knows.
 4. **If approved:** with write access to the repo, open a PR; otherwise open an issue with the proposed text (`gh issue create -R <repo>`). Link it in the local lesson.
 
 ## Consolidation (keep it small)

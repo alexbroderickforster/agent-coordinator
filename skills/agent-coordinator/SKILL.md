@@ -70,6 +70,6 @@ You improve yourself in two layers. Details in `references/self-improvement.md`.
    - if it's a script bug, fix the project's copy of the script.
 
    You read both files at the start of every session, so the next coordinator inherits them.
-2. **Upstream, with the owner's OK.** If a lesson would help any project, draft a scrubbed change to this plugin (an issue or a PR on its repo) and ask the owner before posting. It's shared and public, so one incident never rewrites it without a human look.
+2. **Upstream, with the owner's OK.** If a lesson would help any project, draft a scrubbed change to this plugin (an issue or a PR on its repo) and ask the owner before posting. It's shared and public, so one incident never rewrites it without a human look. If the owner has given standing permission for small fixes, push those and tell them afterwards.
 
 Every few weeks, or when `lessons.md` passes about 30 lines, consolidate: fold repeated lessons into `checklist-local.md`, drop stale ones, and tell the owner what changed.
