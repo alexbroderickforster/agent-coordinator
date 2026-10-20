@@ -1,0 +1,14 @@
+{
+  "name": "agent-coordinator",
+  "owner": { "name": "alexbroderickforster", "url": "https://github.com/alexbroderickforster" },
+  "metadata": { "description": "The agent-coordinator plugin: a release gate and switchboard for teams of parallel coding agents." },
+  "plugins": [
+    {
+      "name": "agent-coordinator",
+      "source": "./",
+      "description": "One Claude Code session coordinates many parallel agents (Claude Code and Codex): approves every production change, verifies releases, tracks sessions, relays messages, starts new sessions.",
+      "version": "0.1.0",
+      "category": "productivity"
+    }
+  ]
+}
