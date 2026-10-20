@@ -74,7 +74,7 @@ Update later with `/plugin update agent-coordinator`.
 2. **Connect your agents** (details below):
    - *New work:* ask the coordinator to "start a Claude/Codex session for X". It writes the kickoff and launches it.
    - *Sessions already running:* paste the join prompt into each one.
-3. **Add one line to CLAUDE.md / AGENTS.md** in each repo:
+3. **Add one line to each repo's agent instruction files** (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`):
    > Before any production deploy, config change or data write, ask the agent coordinator (see .coordinator/AGENT-COORDINATION.md).
 
 From then on, agents send requests like this, and the coordinator checks, decides and logs:
@@ -90,7 +90,7 @@ image only. Rollback: remove tag. After: env diff vs serving, smoke, exclusion p
 | Where the agent runs | How it reaches the coordinator |
 |---|---|
 | Claude Code on the same machine (any terminal, or the desktop app) | `SendMessage` to the coordinator's name |
-| Codex / any CLI agent on the same machine, **any terminal** | `.coordinator/ask-coordinator.sh --from "<name>" --wait 600 "<msg>"` (file mailbox; the reply prints when it comes) |
+| Codex, Gemini CLI, Cursor, Aider or any other agent on the same machine, **any terminal** | `.coordinator/ask-coordinator.sh --from "<name>" --wait 600 "<msg>"` (file mailbox; the reply prints when it comes) |
 | Codex in the same cmux as the coordinator | `.coordinator/cmux-say.sh` types into the coordinator's terminal |
 | Any agent on **another machine** (a teammate's laptop, CI, cloud) | A comment on one agreed GitHub "coordination" issue |
 
@@ -134,7 +134,8 @@ skills/agent-coordinator/
 
 ## Requirements and assumptions
 
-- Claude Code for the coordinator. Workers can be Claude Code, Codex, or any CLI agent that can run a shell script.
+- **Coordinator:** Claude Code. It relies on skills, `SendMessage` and background tasks.
+- **Agents it coordinates:** anything that can run a shell command, receive `SendMessage`, or post a GitHub comment. That includes Claude Code, Codex, Gemini CLI, Cursor's agent, Aider, Amp, OpenCode, Copilot CLI and Goose. Day to day it's been run with Claude Code and Codex; other agents use the same mailbox and GitHub channels. Put the coordination line in the instruction file each tool reads: `CLAUDE.md`, `AGENTS.md` (Codex, Cursor, Amp, OpenCode, Copilot…), or `GEMINI.md`.
 - `git` and `gh` (GitHub CLI) for merge checks and the cross-machine channel.
 - Read access to your deploy platform. The examples use Google Cloud Run (`gcloud`); the checks carry over to any platform with revisions, traffic and audit logs.
 - Optional: cmux to launch sessions into workspaces and type into terminals. Without it, use the file mailbox and launch sessions yourself.

@@ -24,10 +24,12 @@ Codex. "YOLO" means no approvals and no sandbox. Use the model the owner names; 
 cmux new-workspace --name "<Name> (Codex)" --cwd <repo> \
   --command "codex --dangerously-bypass-approvals-and-sandbox -m <model> \"\$(cat <kickoff>)\"" --focus false
 ```
-Tell a Codex kickoff to read `.coordinator/AGENT-COORDINATION.md` and send you a hello with its session id and workspace/surface.
+Any other agent: launch its CLI in a new workspace with the kickoff as its first prompt, in whatever autonomy mode the owner chose. For example, Gemini CLI: `gemini --yolo -m <model> -i "$(cat <kickoff>)"`. Flags change between versions, so check `<cli> --help` first and note what worked in the project lessons.
+
+Tell a non-Claude kickoff to read `.coordinator/AGENT-COORDINATION.md` and send you a hello with its session id and workspace/surface.
 
 ## 3. Confirm it started
-After about 20 s run `cmux read-screen --workspace <ws> | tail -25`. The agent should be working on the kickoff, and a Codex hello should arrive in your terminal.
+After about 20 s run `cmux read-screen --workspace <ws> | tail -25`. The agent should be working on the kickoff, and a non-Claude agent's hello should arrive (mailbox or terminal).
 
 ## 4. Register it
 Add a row to `.coordinator/session-registry.md`: name, location (workspace/surface), session id, what it owns, kickoff path, resume command (`claude --resume <id>` / `codex resume <id>`), status and date. Answer "which session did X?" questions from this table; fall back to searching transcripts.
@@ -36,6 +38,6 @@ Add a row to `.coordinator/session-registry.md`: name, location (workspace/surfa
 New sessions ask for history. Answer from the logs and notes. When you don't know, ask the owning session and relay the answer. Send pointers (file paths, PR numbers), not pasted data.
 
 ## Choosing agents and models
-- The owner chooses Claude Code or Codex. Default to Claude Code with the strongest model for judgment work.
+- The owner chooses the agent (Claude Code, Codex, Gemini CLI…). Default to Claude Code with the strongest model for judgment work.
 - Mechanical sub-work goes to cheaper models or subagents. Keep expensive reviewers for bounded reviews.
-- Codex can't use SendMessage, so everything goes through the terminal script and the git host.
+- Only Claude Code has SendMessage. Every other agent talks through the mailbox, the terminal script or the git host.

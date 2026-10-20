@@ -1,6 +1,6 @@
 # Coordinating with the agent coordinator
 
-For Codex and any other agent working on this project.
+For every agent working on this project: Claude Code, Codex, Gemini CLI, Cursor, Aider, or anything else that can run a shell command.
 
 The agent coordinator (also called the deploy coordinator) is a Claude Code session named **<coordinator name>**, in <multiplexer> workspace:<n> / surface:<n>.
 Every production change by any agent goes through it first.
@@ -14,13 +14,13 @@ Every production change by any agent goes through it first.
 ## How to reach the coordinator
 Claude Code sessions on this machine use `SendMessage` to "<coordinator name>". Agents on other machines comment on <coordination issue URL>, starting with "[<your name>]".
 
-Codex and other terminal agents on this machine use the mailbox (works in any terminal):
+Every other agent on this machine (Codex, Gemini CLI, Cursor, Aider…) uses the mailbox. It works in any terminal:
 
     .coordinator/ask-coordinator.sh --from "<your name>" --wait 600 "<message>"
 
 Or, inside the same cmux as the coordinator, type into its terminal:
 
-    .coordinator/cmux-say.sh workspace:<n> surface:<n> "[CODEX <your-session-id> @ workspace:<n>/surface:<n>] <message>"
+    .coordinator/cmux-say.sh workspace:<n> surface:<n> "[AGENT <your name> (<tool>) <session-id> @ workspace:<n>/surface:<n>] <message>"
 
 - ALWAYS start with the bracketed prefix and your own workspace/surface (`cmux identify`), so the coordinator knows you're a peer, not the owner, and can reply to you.
 - Keep a durable copy of anything long as a comment on the related issue/PR.

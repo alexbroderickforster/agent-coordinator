@@ -1,10 +1,10 @@
 {
   "name": "agent-coordinator",
-  "version": "0.1.1",
-  "description": "One Claude Code session coordinates many agents (Claude Code and Codex) working in parallel: it approves every production change, verifies each release itself, tracks who's working on what, passes messages between sessions, and starts new sessions with proper briefings.",
+  "version": "0.2.0",
+  "description": "One Claude Code session coordinates many coding agents working in parallel (Claude Code, Codex, Gemini CLI or any agent that can run a shell command): it approves every production change, verifies each release itself, tracks who's working on what, passes messages between sessions, and starts new sessions with proper briefings.",
   "author": { "name": "alexbroderickforster", "url": "https://github.com/alexbroderickforster" },
   "homepage": "https://github.com/alexbroderickforster/agent-coordinator",
   "repository": "https://github.com/alexbroderickforster/agent-coordinator",
   "license": "MIT",
-  "keywords": ["multi-agent", "coordination", "deploy", "codex", "release-gate", "cmux", "worktrees"]
+  "keywords": ["multi-agent", "coordination", "deploy", "codex", "gemini-cli", "agents-md", "release-gate", "cmux", "worktrees"]
 }

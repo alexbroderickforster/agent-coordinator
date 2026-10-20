@@ -2,7 +2,7 @@ Task: <one paragraph in the owner's words: what and why>. <PLANNING ONLY until t
 
 You were started by the agent coordinator <coordinator name> (<multiplexer> workspace:<n> / surface:<n>).
 - Claude Code sessions: reach it with SendMessage to "<coordinator name>".
-- Codex and other terminal agents: first read .coordinator/AGENT-COORDINATION.md, then use .coordinator/cmux-say.sh with the [CODEX <your-session-id> @ workspace:<n>/surface:<n>] prefix (find yours with `cmux identify`).
+- Any other agent (Codex, Gemini CLI, Cursor, Aider…): first read .coordinator/AGENT-COORDINATION.md, then use .coordinator/ask-coordinator.sh --from "<your name>" --wait 600 "<msg>" (any terminal), or inside cmux .coordinator/cmux-say.sh with the [AGENT <name> (<tool>) <session-id> @ workspace:<n>/surface:<n>] prefix.
 - Send a short hello when you start (session id + where you are) so it can register you.
 - Ask it for context any time. It keeps the decision history and can ask other sessions for you.
 - Long content goes on the git host (PR or issue comments), not in terminal messages.

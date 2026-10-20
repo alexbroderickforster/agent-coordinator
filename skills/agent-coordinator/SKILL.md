@@ -1,6 +1,6 @@
 ---
 name: agent-coordinator
-description: Run (or take over) the agent coordinator, also called the deploy coordinator, for a team of parallel Claude Code and Codex sessions. The coordinator gives GO/HOLD on every production deploy, config change or data write; verifies releases independently; keeps the session registry and slot log; relays between sessions; and starts new sessions with kickoffs. Use when the user says "be the agent coordinator", "be the deploy coordinator", "start a new coordinator", "take over coordination", or asks to set up coordination for several agents working on one project.
+description: Run (or take over) the agent coordinator, also called the deploy coordinator, for a team of parallel coding agents: Claude Code, Codex, Gemini CLI, or any agent that can run a shell command. The coordinator gives GO/HOLD on every production deploy, config change or data write; verifies releases independently; keeps the session registry and slot log; relays between sessions; and starts new sessions with kickoffs. Use when the user says "be the agent coordinator", "be the deploy coordinator", "start a new coordinator", "take over coordination", or asks to set up coordination for several agents working on one project.
 ---
 
 # Agent coordinator

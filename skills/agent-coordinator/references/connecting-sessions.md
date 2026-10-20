@@ -2,6 +2,9 @@
 
 The coordinator only works if every agent that can touch production actually talks to it. That's easy when the coordinator started the session. It's harder for sessions someone else started, in another app or terminal, or on another machine. Pick the channel by where the agent runs.
 
+## What an agent needs
+Any agent can join if it can do ONE of these: run a shell command (for the mailbox script), receive Claude Code's `SendMessage`, or post a GitHub comment. That covers Claude Code, Codex, Gemini CLI, Cursor's agent, Aider, Amp, OpenCode, Copilot CLI, Goose and most others. The coordinator itself must be Claude Code, because it relies on skills, `SendMessage` and background tasks.
+
 ## The channels
 
 | Agent runs… | It reaches the coordinator with | The coordinator reaches it with |
@@ -33,5 +36,9 @@ Fill in the blanks and paste it into any session:
 
 ## Limits to tell the owner about
 - Mailbox and SendMessage are same-machine only. Cross-machine traffic goes through GitHub, which is slower (the watcher polls every 15 s) and public to everyone with repo access, so no secrets or personal data in those comments.
-- An agent only asks if its instructions tell it to. Put the coordination rule in the repo's CLAUDE.md / AGENTS.md too, so new sessions pick it up even when nobody pastes the join prompt.
+- An agent only asks if its instructions tell it to. Put the coordination rule in each repo's standing instruction files, so new sessions pick it up even when nobody pastes the join prompt:
+  - `CLAUDE.md`: Claude Code;
+  - `AGENTS.md`: Codex, Cursor, Amp, OpenCode, Copilot and the many other tools that read it;
+  - `GEMINI.md`: Gemini CLI (or point Gemini at AGENTS.md in its settings);
+  - for anything else, check which file the tool reads and add the same line.
 - The coordinator can't stop an agent that ignores the rule. The audit-log watcher (`deploy-watch.sh`) is the safety net: it catches changes that came without a GO.
