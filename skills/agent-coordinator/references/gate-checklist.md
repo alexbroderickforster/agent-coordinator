@@ -44,6 +44,7 @@ If any is missing, ask; don't guess.
 - [ ] One independent probe: an unauthenticated request status, a count, or a log line from the run.
 - [ ] Data-safety checks the change touches (e.g. excluded content returns 0 hits; no secrets printed).
 - [ ] Log time, revision, what shipped, rollback and follow-ups. Close the slot.
+- [ ] Tell the requester to remove its deploy worktree (`git worktree remove <path>`) unless a follow-up needs it.
 
 ## Data writes, sends and reads
 - Prod data writes (databases, payments, CRM, sheets fed by jobs): same GO discipline, with dry-run counts first.

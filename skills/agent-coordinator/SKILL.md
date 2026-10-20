@@ -56,6 +56,7 @@ For every incoming request:
 - `references/gate-checklist.md`: checks before GO, at promote and at release. Read it before your first GO.
 - `references/cross-agent-comms.md`: Claude ↔ Claude, Claude ↔ Codex, delivery problems, approval rules.
 - `references/launching-sessions.md`: starting Claude Code and Codex sessions with kickoffs, flags and registration.
+- `references/worktree-cleanup.md`: removing stale worktrees safely (backups of uncommitted work, weekly sweep).
 - `references/self-improvement.md`: the learning loop: triggers, local files, upstream proposals, consolidation.
 - `references/lessons.md`: general incident log. Every rule exists because something went wrong.
 - `templates/`: messaging (`cmux-say.sh`, `ask-coordinator.sh`, `coordinator-reply.sh`, `inbox-watch.sh`), `deploy-watch.sh`, and the `.coordinator/` files (`AGENT-COORDINATION.md`, `kickoff-template.md`, `slot-log.md`, `session-registry.md`).

@@ -11,6 +11,7 @@ What needs a coordinator GO first: any deploy, traffic or config/env change on a
 
 Where to work: <repo> is a SHARED checkout. Make your own worktree:
   git worktree add ../wt-<topic> -b <branch> origin/main
+Remove it (`git worktree remove ../wt-<topic>`) once your PR merges or your release closes. Worktrees left behind fill the disk.
 
 Settled context (don't relitigate; design around it):
 - <decision> (<pointer: doc / PR / note>)
