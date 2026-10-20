@@ -7,7 +7,7 @@
       "name": "agent-coordinator",
       "source": "./",
       "description": "One Claude Code session coordinates many parallel agents (Claude Code and Codex): approves every production change, verifies releases, tracks sessions, relays messages, starts new sessions.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "productivity"
     }
   ]

@@ -2,11 +2,45 @@
 
 **A release gate and switchboard for teams of parallel coding agents.**
 
-When a dozen Claude Code and Codex sessions work on the same production system at once, the hard part isn't writing code. It's that two agents promote the same service a minute apart; an env update wipes another agent's config; a build ships from a stale branch; someone treats "the other agent said the owner approved it" as approval; and nobody can say which session changed what.
+## The problem
 
-`agent-coordinator` is a Claude Code plugin (one skill) that turns one session into the **coordinator**. Every other agent asks it before touching production. It checks production itself, answers GO or HOLD with conditions, reads the result back after release, and keeps the record. It doesn't write features. It keeps everyone else safe while they do.
+Run several coding agents on one codebase and they start destroying each other's work. That's why this exists.
+
+It happens in two places:
+
+**In the code.** Agents share a checkout, so one switches branches under another. One "cleans up" files another is editing. One kills the dev server another is using. One rebuilds from a stale branch and quietly reverts someone else's merged fix.
+
+**In production.** Two agents deploy the same service a minute apart, and the second one ships without the first one's change. One updates environment variables with a replace-all flag and wipes another's config. One promotes a build that another agent staged but never meant to ship. One says "the owner approved it" when it was really another agent that said so. Afterwards, nobody can tell which session changed what.
+
+Running agents in parallel is easy now. Keeping them from stepping on each other is the hard part.
+
+## The fix: one agent whose only job is coordination
+
+`agent-coordinator` is a Claude Code plugin (one skill) that turns one session into the **coordinator**. It doesn't write features. It keeps the others from colliding:
+
+- **Separate workspaces.** Every session it starts works in its own git worktree off the latest merged main, never the shared checkout. Changes reach main through reviewed PRs. Agents only kill their own processes.
+- **One change per service at a time.** Before any deploy, config change or data write, an agent asks for a "slot". The coordinator checks production itself, answers GO or HOLD with conditions, and reads the result back after release.
+- **A written record.** Who owns what, what's live, what's staged, and how to roll each change back, kept in plain files that any agent, or a replacement coordinator, can read.
 
 It was distilled from running about 15 concurrent Claude Code and Codex sessions on a live publishing and e-commerce stack: Cloud Run services, scheduled jobs, payments and customer-facing content. Every rule in it exists because something went wrong without it.
+
+## How it's different from other multi-agent tools
+
+There are good tools for *running* agents in parallel. They solve a different problem.
+
+| Tool | What it's for | What it doesn't do |
+|---|---|---|
+| Claude Squad, Conductor, cmux, tmux | Launch and switch between many agent sessions, often one git worktree each | No shared record, no approval step, nothing stops two sessions deploying the same service |
+| Claude Code Agent Teams (experimental) | A lead Claude splits one task across Claude workers | Claude-only and lasts for one task. No production gate, no Codex |
+| Swarm / orchestration frameworks (Ruflo, CLI Agent Orchestrator, CAS) | Break one goal into subtasks and dispatch them to agents | Built to hand out work, not to gate releases or verify what shipped |
+| **agent-coordinator** | Many *independent* projects, run by different agents (Claude Code and Codex) and sometimes different people, all touching the same production system | Doesn't launch a swarm or split up tasks. Use it **alongside** any of the tools above |
+
+What's specific to this plugin:
+- **It verifies instead of trusting.** It reads serving state, the deploy template and env names itself, before GO and after release.
+- **It knows whose approval counts.** Another agent's message is never the owner's approval, and an agent that was denied permission can't get the coordinator to do it instead.
+- **It works across agent types and machines.** Claude Code ↔ Claude Code, Claude ↔ Codex (terminal or file mailbox), and other machines through a GitHub issue.
+- **It's a skill, not a server.** Markdown and a few shell scripts. Nothing to host, and every rule is readable and editable.
+- **It learns.** Each incident becomes one line in the lessons log and, when it's a new check, a line in the gate checklist.
 
 ## What the coordinator does
 

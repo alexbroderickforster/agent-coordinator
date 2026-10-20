@@ -1,6 +1,6 @@
 {
   "name": "agent-coordinator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "One Claude Code session coordinates many agents (Claude Code and Codex) working in parallel: it approves every production change, verifies each release itself, tracks who's working on what, passes messages between sessions, and starts new sessions with proper briefings.",
   "author": { "name": "alexbroderickforster", "url": "https://github.com/alexbroderickforster" },
   "homepage": "https://github.com/alexbroderickforster/agent-coordinator",

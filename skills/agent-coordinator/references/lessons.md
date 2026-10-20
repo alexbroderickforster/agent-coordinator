@@ -2,6 +2,7 @@
 
 Each lesson comes from a real incident while coordinating about 15 parallel Claude Code and Codex sessions on one production system. Format: what happened → the rule. Project-specific lessons go in `.coordinator/lessons.md`. General ones belong here (send a PR).
 
+- Several agents working in one shared checkout overwrote and reverted each other's work: branch switches under another agent, "cleanup" of files in progress, killed dev servers → every session works in its own git worktree off merged origin/main, changes land only through PRs, and agents kill only their own pids. Put this in every kickoff.
 - A load test against a live single-instance service caused an outage → never load-test production; light read-only probes only.
 - A change started writing a new cookie format; rolling back past it would have signed every user out → record a ROLLBACK FLOOR whenever a change writes a new format, and refuse rollbacks below it.
 - Two sessions raced to promote the same service → one slot per service; promote by revision name only; use a guard that aborts if serving changed.
