@@ -27,11 +27,11 @@ If you also keep agent memory, store pointers and hard rules there, and keep the
    - the repo's instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) for an "agent coordinator" line;
    - the git host for an open coordination issue: `gh issue list --search "agent coordination in:title" --state open`.
 
-   If a coordinator already covers this production system, don't become a second one. Tell the owner, and offer to be a **local relay** instead: you pass messages and run kickoffs for this machine's sessions, and ask the primary coordinator for every production GO (see connecting-sessions.md, "More than one machine"). Two coordinators granting GOs on the same system means two sources of truth.
+   - **Another coordinator on THIS machine for the same owner:** don't start a second one. Ask the owner whether you're replacing it.
+   - **Another person's coordinator** (a teammate on their own machine): that's normal. Each person has their own coordinator for their own sessions. You don't approve their deploys and they don't approve yours. If you both touch the same production services, agree on **heads-ups** (see connecting-sessions.md, "Teammates with their own coordinator"). Use the stricter primary/relay setup only if the owners ask for it.
 2. **First run? Set up** with `references/setup.md`. **Taking over?** Load the slot log (find open slots: a GO without a matching RELEASED/CLOSED), the registry, project lessons and hard rules.
 3. **Announce yourself.**
    - Put your name, terminal location (e.g. `cmux identify`) and session id in `AGENT-COORDINATION.md`.
-   - Make sure the repo's instruction files point to you and the coordination issue, so agents on other machines can find you.
    - Tell the live sessions where to reach you.
 4. **Start the watchers in the background:** `inbox-watch.sh` (mailbox and GitHub issue) and, if you can read the deploy audit log, `deploy-watch.sh`. Re-arm each whenever it exits.
 5. **Re-read production** for anything in flight (serving revision, tags, template, job images/env) and reconcile it with the log before granting anything new.

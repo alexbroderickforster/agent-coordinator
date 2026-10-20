@@ -73,7 +73,7 @@ Update later with `/plugin update agent-coordinator`.
    claude plugin install agent-coordinator@agent-coordinator
    ```
 2. Tell your human that skills load at session start: open a **new** Claude Code session in the folder that holds their repos and say **"be the agent coordinator"**.
-3. That new session runs the skill. It checks whether a coordinator already exists for this production system (on this machine, in the repo's instruction files, or as an open coordination issue). It then either sets up or becomes a local relay, and briefs the human on how to use it.
+3. That new session runs the skill. It checks whether this machine already has a coordinator, sets itself up, and briefs the human on how to use it.
 
 ## Quick start
 
@@ -110,7 +110,7 @@ The coordinator runs `inbox-watch.sh` in the background, which wakes it for mail
 1. **Let the coordinator start sessions.** They get the rules, a worktree, and a registry entry from minute one.
 2. **For sessions someone else started, paste the join prompt:**
    > You're joining a team of agents coordinated by the agent coordinator "<name>". Read <path>/.coordinator/AGENT-COORDINATION.md now and follow it. Before ANY production deploy, traffic or config change, data write, customer-facing send, or production read beyond simple counts, ask the coordinator and wait for GO. Reach it with <channel>. Send it a hello now with your name, what you're working on, your session id, and how to reach you.
-3. **Teammates on other machines** join through the GitHub issue. If a teammate installs this too, their coordinator finds yours (through the repo's instruction files and the open coordination issue) and becomes a **local relay**: it starts and briefs their sessions, but asks yours for every production go-ahead. Only one coordinator grants go-aheads per production system, so there's one source of truth.
+3. **Teammates get their own coordinator.** Everyone can install this and run a coordinator for their own sessions; nobody gates anyone else. If you share production services, the coordinators trade one-line **heads-ups** on a shared GitHub issue, and the fresh-read checks before every promote catch the rest. If a team ever wants one single gate, there's an optional primary/relay mode.
 
 ## What's inside
 
@@ -119,7 +119,7 @@ skills/agent-coordinator/
   SKILL.md                       the role, takeover steps, the request loop
   references/
     setup.md                     first run: .coordinator/, channels, permission mode, access
-    connecting-sessions.md       every channel, the join prompt, teammates and local relays
+    connecting-sessions.md       every channel, the join prompt, teammates and heads-ups
     owner-briefing.md            what the coordinator tells you after setup
     gate-checklist.md            before GO, at promote, at release; jobs; data and sends
     cross-agent-comms.md         SendMessage, terminal typing quirks, mailbox, approval rules

@@ -9,7 +9,7 @@ Cover:
 3. **How to start work:** "Ask me to start a session for X (Claude Code, Codex, Gemini CLI, Muse Code…). I'll write its briefing, launch it in its own workspace, and register it."
 4. **How to connect sessions they start themselves:** give the join prompt (connecting-sessions.md) with your name and the right channel already filled in, ready to paste. Say which channel fits where: same machine Claude Code → message you directly; other agents on this machine → the mailbox script; other machines → the coordination issue (link it).
 5. **The one-line rule for the repo:** offer to add "Before any production deploy, config change or data write, ask the agent coordinator (see …)" to `CLAUDE.md`, `AGENTS.md` and `GEMINI.md`, and to open the coordination issue if there isn't one. That's how agents nobody briefed still find you.
-6. **Teammates:** if other people run agents against the same production system, one coordinator grants go-aheads. Theirs can be a local relay that asks you, or the other way round. Ask the owner which.
+6. **Teammates:** each person can have their own coordinator; you gate only this owner's sessions. If a teammate deploys to the same services, offer a shared heads-up channel (no approvals either way). Mention the stricter single-gate option exists if they ever want it.
 7. **Choices only they can make:** the permission mode for sessions you start (skip permissions or not), whether `.coordinator/` is committed or local, and which production accounts you get READ access to.
 8. **How to pick you up again:** your session name and resume command, and that a new session can take over by saying "be the agent coordinator", because all the state is in `.coordinator/`.
 

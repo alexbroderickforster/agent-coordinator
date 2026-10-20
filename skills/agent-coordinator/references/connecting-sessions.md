@@ -23,13 +23,16 @@ The coordinator runs `inbox-watch.sh` in the background (re-arm it whenever it e
 2. **An existing session joins.** Paste the join prompt below into it. It reads the guide, says hello, and from then on asks before production changes. Works for any agent on the same machine.
 3. **Another person's sessions, on their own machine.** They join through the GitHub coordination issue (paste the join prompt with the GitHub channel filled in).
 
-## More than one machine (teammates with their own coordinator)
-Each person may want a coordinator for their own sessions, so it can start them, brief them and pass messages locally. That's fine, as long as only ONE coordinator grants production go-aheads for a given production system: the **primary**. The others are **local relays**:
-- A relay handles everything local: launching sessions, kickoffs, its registry, passing messages, answering "which session…".
-- For every production GO it asks the primary on the coordination issue, passing along the full request (what, PR, live state, rollback, verification). It relays the answer and posts the RELEASE back there.
-- The primary logs relay requests in its slot log like any other. One slot per service still holds across machines.
-- How a new coordinator finds out it's a relay: the repo's instruction files and the open coordination issue name the primary (setup step "announce yourself"). If both exist and point to someone else, become a relay and tell your owner why.
-- If the owners want to switch which one is primary, the old primary closes its open slots, posts a handover on the issue, and updates the instruction files.
+## Teammates with their own coordinator
+
+**Default: everyone has their own.** A coordinator works for one owner and gates that owner's sessions. A teammate runs their own coordinator for their own sessions. Neither approves the other's work.
+
+When two owners touch the same production services, a deploy from one side can still collide with the other's. For example, your agent promotes a revision a minute after theirs, or inherits a build they staged. Three cheap habits cover most of it, without either side gatekeeping the other:
+1. **Fresh reads catch it.** The gate checklist already re-reads serving and the deploy template right before every GO and promote, so a teammate's change shows up as "serving changed, abort and re-check".
+2. **Heads-ups, not permission.** Post a one-line FYI on a shared channel (a GitHub "deploy heads-ups" issue, or the team chat) when you stage or promote a shared service: what, revision, rollback. Each coordinator watches it (`inbox-watch.sh` with `COORD_GH_ISSUE`) and factors it into its next GO. Nobody waits for anyone.
+3. **Say who owns what.** Note in the repo's instruction files which owner usually deploys which services, so agents know whose changes they might run into.
+
+**Optional, stricter: one primary.** If the owners decide they want a single gate for a production system (after repeated collisions, or before a high-stakes launch), one coordinator becomes the **primary** and the others act as **local relays**. A relay still starts sessions, briefs them and passes messages, but asks the primary for each production GO on the shared issue and posts RELEASEs back. Only switch to this when the owners ask for it.
 
 ## The join prompt
 
