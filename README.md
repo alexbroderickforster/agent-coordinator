@@ -63,7 +63,9 @@ In Claude Code:
 
 Or from a shell: `claude plugin marketplace add alexbroderickforster/agent-coordinator && claude plugin install agent-coordinator@agent-coordinator`.
 
-Update later with `/plugin update agent-coordinator`.
+**Turn on auto-update (recommended).** Claude Code auto-updates plugins from Anthropic's own marketplaces, but not from third-party ones like this, unless you switch it on. Once: run `/plugin`, open the **Marketplaces** tab, select **agent-coordinator**, and choose **Enable auto-update**. New versions then arrive on their own after a session starts, and Claude Code shows "Plugin updated: agent-coordinator · Run /reload-plugins to apply". Run `/reload-plugins`, or just start a new session.
+
+Without auto-update, update by hand: `/plugin update agent-coordinator` (or `claude plugin marketplace update agent-coordinator && claude plugin update agent-coordinator@agent-coordinator`), then reload.
 
 ### If you're an AI agent and someone handed you this link
 
@@ -72,7 +74,7 @@ Update later with `/plugin update agent-coordinator`.
    claude plugin marketplace add alexbroderickforster/agent-coordinator
    claude plugin install agent-coordinator@agent-coordinator
    ```
-2. Tell your human that skills load at session start: open a **new** Claude Code session in the folder that holds their repos and say **"be the agent coordinator"**.
+2. Recommend that your human turn on auto-update for this marketplace (`/plugin` → Marketplaces → agent-coordinator → Enable auto-update). Tell them skills load at session start: open a **new** Claude Code session in the folder that holds their repos and say **"be the agent coordinator"**.
 3. That new session runs the skill. It checks whether this machine already has a coordinator, sets itself up, and briefs the human on how to use it.
 
 ## Quick start
