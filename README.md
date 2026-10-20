@@ -95,6 +95,20 @@ image @sha256:9a3e…. Serving api-00060 at 100%. Command: --no-traffic --tag ca
 image only. Rollback: remove tag. After: env diff vs serving, smoke, exclusion probe.
 ```
 
+## Where to run the coordinator
+
+The coordinator itself is a **Claude Code** session. It relies on Claude Code's skills, session-to-session messaging and background tasks, so it can't run inside ChatGPT, the Codex app or other assistants yet. The agents it coordinates can be anything. Where to start it depends on which agents you use:
+
+| Your agents | Start the coordinator in | What you get |
+|---|---|---|
+| **Claude Code only** | Anywhere: the Claude desktop app, a terminal, an IDE | Everything. It messages every Claude Code session on the machine directly, whichever app each one runs in |
+| **A mix of tools** (Claude Code plus Codex, Gemini CLI, Muse Code, Aider…) | **A terminal multiplexer, with all your agents inside it.** [cmux](https://github.com/manaflow-ai/cmux) works out of the box | Everything. It can start new sessions in their own workspaces, type into any agent's terminal and read its screen |
+| A mix, but you'd rather not use a multiplexer | The desktop app or any terminal | Most of it. Other agents reach it through the file mailbox, but it can only reply while they're waiting, and it can't start their sessions for you |
+| **Codex / other agents only** | A Claude Code session that runs only as the coordinator | Works the same as a mix. The workers never need to touch Claude |
+| Teammates or agents on **other machines** | Wherever you like | Messages go through a shared GitHub issue |
+
+**Other multiplexers.** tmux, Zellij, WezTerm and kitty can all type into terminals from a script, so they can do what cmux does here. The bundled `cmux-say.sh` and the launch commands are written for cmux, so for another multiplexer swap in its send-text command (e.g. `tmux send-keys`). `setup.md` shows the tmux version. PRs adding others are welcome.
+
 ## Connecting sessions
 
 | Where the agent runs | How it reaches the coordinator |
@@ -150,7 +164,7 @@ skills/agent-coordinator/
 - **Agents it coordinates:** anything that can run a shell command, receive `SendMessage`, or post a GitHub comment. That includes Claude Code, Codex, Gemini CLI, Meta's Muse Code, Cursor's agent, Aider, Amp, OpenCode, Copilot CLI and Goose. Day to day it's been run with Claude Code and Codex; other agents use the same mailbox and GitHub channels. Put the coordination line in the instruction file each tool reads: `CLAUDE.md`, `AGENTS.md` (Codex, Cursor, Amp, OpenCode, Copilot…), or `GEMINI.md`.
 - `git` and `gh` (GitHub CLI) for merge checks and the cross-machine channel.
 - Read access to your deploy platform. The examples use Google Cloud Run (`gcloud`); the checks carry over to any platform with revisions, traffic and audit logs.
-- Optional: cmux to launch sessions into workspaces and type into terminals. Without it, use the file mailbox and launch sessions yourself.
+- Optional: a terminal multiplexer (cmux works out of the box; tmux and others with a small change) if you mix agent tools. See "Where to run the coordinator".
 
 ## Safety notes
 
