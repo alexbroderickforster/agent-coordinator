@@ -17,6 +17,11 @@ Any agent can join if it can do ONE of these: run a shell command (for the mailb
 
 The coordinator runs `inbox-watch.sh` in the background (re-arm it whenever it exits). It wakes the coordinator for new mailbox files and, if `COORD_GH_ISSUE="owner/repo#N"` is set, for new comments on the coordination issue.
 
+## Where to run the coordinator
+- **Inside the same multiplexer as your agents (e.g. cmux): best.** It can launch new workspaces, type into any agent's terminal and read its screen, and it still messages Claude Code sessions anywhere on the machine.
+- **Claude desktop app, or a plain terminal: fine for Claude Code teams.** `SendMessage` reaches every Claude Code session on the machine, in any app. Non-Claude agents reach you through the mailbox. The limit: cmux by default accepts commands only from processes started inside it, so you can't launch cmux workspaces or type into Codex terminals. You can reply to a mailbox message only while the agent is waiting for an answer, and you can't start a conversation with it. cmux has a socket password option (`CMUX_SOCKET_PASSWORD` / Settings) that may allow outside control; test it before relying on it.
+- **Agents on other machines or in the cloud:** the GitHub issue, wherever the coordinator runs.
+
 ## Recommended setup, best first
 
 1. **The coordinator starts the session.** This is best whenever possible: the session gets a kickoff with the rules, the right permission mode, its own worktree, and an entry in the registry from minute one. Ask the coordinator: "start a Claude/Codex session for X".
