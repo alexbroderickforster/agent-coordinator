@@ -29,7 +29,7 @@ If you also keep agent memory, store pointers and hard rules there, and keep the
 
    - **Another coordinator on THIS machine for the same owner:** don't start a second one. Ask the owner whether you're replacing it.
    - **Another person's coordinator** (a teammate on their own machine): that's normal. Each person has their own coordinator for their own sessions. You don't approve their deploys and they don't approve yours. If you both touch the same production services, agree on **heads-ups** (see connecting-sessions.md, "Teammates with their own coordinator"). Use the stricter primary/relay setup only if the owners ask for it.
-2. **First run? Set up** with `references/setup.md`. **Taking over?** Load the slot log (find open slots: a GO without a matching RELEASED/CLOSED), the registry, project lessons and hard rules.
+2. **First run? Set up** with `references/setup.md`. **Taking over?** Load the slot log (find open slots: a GO without a matching RELEASED/CLOSED), the registry, hard rules, and the project's learned rules: `.coordinator/lessons.md` and `.coordinator/checklist-local.md`. These override the generic checklist where they're stricter.
 3. **Announce yourself.**
    - Put your name, terminal location (e.g. `cmux identify`) and session id in `AGENT-COORDINATION.md`.
    - Tell the live sessions where to reach you.
@@ -56,12 +56,20 @@ For every incoming request:
 - `references/gate-checklist.md`: checks before GO, at promote and at release. Read it before your first GO.
 - `references/cross-agent-comms.md`: Claude ↔ Claude, Claude ↔ Codex, delivery problems, approval rules.
 - `references/launching-sessions.md`: starting Claude Code and Codex sessions with kickoffs, flags and registration.
+- `references/self-improvement.md`: the learning loop: triggers, local files, upstream proposals, consolidation.
 - `references/lessons.md`: general incident log. Every rule exists because something went wrong.
 - `templates/`: messaging (`cmux-say.sh`, `ask-coordinator.sh`, `coordinator-reply.sh`, `inbox-watch.sh`), `deploy-watch.sh`, and the `.coordinator/` files (`AGENT-COORDINATION.md`, `kickoff-template.md`, `slot-log.md`, `session-registry.md`).
 
-## Keeping it current (standing duty)
+## Self-improvement (standing duty)
 
-In the same turn something happens:
-- **Near-miss or incident:** add one line to `.coordinator/lessons.md` (date, what happened, the rule). If it's a new check, add it to the project's guide too.
-- **New communication quirk or fix:** fix the project's copy of the script and note it.
-- **Lesson that would help any project:** propose it upstream as a PR to this plugin's repo, and keep anything project-specific out of it.
+You improve yourself in two layers. Details in `references/self-improvement.md`.
+
+1. **Local, automatic, same turn.** When a trigger happens (a HOLD that caught something, a near-miss, a rollback, an owner correcting you, a message that didn't arrive, a check you wished you'd had), write it down before moving on:
+   - one line in `.coordinator/lessons.md`: date, what happened → the rule;
+   - if it's a check, also a line in `.coordinator/checklist-local.md`;
+   - if it's a script bug, fix the project's copy of the script.
+
+   You read both files at the start of every session, so the next coordinator inherits them.
+2. **Upstream, with the owner's OK.** If a lesson would help any project, draft a scrubbed change to this plugin (an issue or a PR on its repo) and ask the owner before posting. It's shared and public, so one incident never rewrites it without a human look.
+
+Every few weeks, or when `lessons.md` passes about 30 lines, consolidate: fold repeated lessons into `checklist-local.md`, drop stale ones, and tell the owner what changed.

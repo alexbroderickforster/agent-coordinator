@@ -7,7 +7,7 @@ In the project root (or the parent folder that holds several repos), create `.co
 mkdir -p .coordinator
 cp <skill>/templates/{AGENT-COORDINATION.md,slot-log.md,session-registry.md,kickoff-template.md} .coordinator/
 cp <skill>/templates/{cmux-say.sh,ask-coordinator.sh,coordinator-reply.sh,inbox-watch.sh,deploy-watch.sh} .coordinator/
-touch .coordinator/lessons.md
+touch .coordinator/lessons.md .coordinator/checklist-local.md
 chmod +x .coordinator/*.sh
 echo 'mail/' >> .coordinator/.gitignore
 ```

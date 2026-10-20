@@ -40,7 +40,7 @@ What's specific to this plugin:
 - **It knows whose approval counts.** Another agent's message is never the owner's approval, and an agent that was denied permission can't get the coordinator to do it instead.
 - **It works across agent types and machines.** Claude Code ↔ Claude Code, Claude ↔ Codex (terminal or file mailbox), and other machines through a GitHub issue.
 - **It's a skill, not a server.** Markdown and a few shell scripts. Nothing to host, and every rule is readable and editable.
-- **It learns.** Each incident becomes one line in the lessons log and, when it's a new check, a line in the gate checklist.
+- **It improves itself.** Local lessons update automatically; shared improvements go upstream with a human's OK.
 
 ## What the coordinator does
 
@@ -50,7 +50,7 @@ What's specific to this plugin:
 - **Enforces whose approval counts.** A peer's "the owner said yes" is not approval for customer-facing or irreversible actions. A peer that was denied permission can't get the coordinator to do it instead.
 - **Relays between agents.** Claude ↔ Claude through `SendMessage`; Claude ↔ Codex through the terminal or a file mailbox; other machines through a GitHub issue.
 - **Starts new sessions properly.** It writes a kickoff (task, settled decisions, rules, how to reach the coordinator), launches Claude Code or Codex in its own workspace, and registers it.
-- **Learns.** Incidents become one-line rules in a lessons log, and checks are added to the gate checklist.
+- **Improves itself.** When something goes wrong, it adds a rule to the project's own lessons and checklist that same turn, and every future coordinator session reads them. Lessons that would help everyone are drafted as scrubbed PRs or issues to this repo, posted only with your OK.
 
 ## Install
 
@@ -138,6 +138,7 @@ skills/agent-coordinator/
     gate-checklist.md            before GO, at promote, at release; jobs; data and sends
     cross-agent-comms.md         SendMessage, terminal typing quirks, mailbox, approval rules
     launching-sessions.md        kickoffs; launch commands for Claude Code and Codex; registry
+    self-improvement.md          the learning loop: triggers, local rules, upstream PRs
     lessons.md                   the incident log behind every rule
   templates/
     AGENT-COORDINATION.md        the guide every other agent reads
@@ -174,7 +175,7 @@ skills/agent-coordinator/
 
 ## Contributing
 
-Found a new failure mode? Open a PR that adds one line to `references/lessons.md` (what happened → the rule) and, if it's a new check, a line in `gate-checklist.md`. Keep project-specific details out.
+Your coordinator will offer to send improvements here itself (scrubbed, with your OK). Or by hand: found a new failure mode? Open a PR that adds one line to `references/lessons.md` (what happened → the rule) and, if it's a new check, a line in `gate-checklist.md`. Keep project-specific details out.
 
 ## License
 
