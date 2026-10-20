@@ -3,7 +3,7 @@
 The coordinator only works if every agent that can touch production actually talks to it. That's easy when the coordinator started the session. It's harder for sessions someone else started, in another app or terminal, or on another machine. Pick the channel by where the agent runs.
 
 ## What an agent needs
-Any agent can join if it can do ONE of these: run a shell command (for the mailbox script), receive Claude Code's `SendMessage`, or post a GitHub comment. That covers Claude Code, Codex, Gemini CLI, Cursor's agent, Aider, Amp, OpenCode, Copilot CLI, Goose and most others. The coordinator itself must be Claude Code, because it relies on skills, `SendMessage` and background tasks.
+Any agent can join if it can do ONE of these: run a shell command (for the mailbox script), receive Claude Code's `SendMessage`, or post a GitHub comment. That covers Claude Code, Codex, Gemini CLI, Muse Code, Cursor's agent, Aider, Amp, OpenCode, Copilot CLI, Goose and most others. The coordinator itself must be Claude Code, because it relies on skills, `SendMessage` and background tasks.
 
 ## The channels
 
@@ -21,7 +21,15 @@ The coordinator runs `inbox-watch.sh` in the background (re-arm it whenever it e
 
 1. **The coordinator starts the session.** This is best whenever possible: the session gets a kickoff with the rules, the right permission mode, its own worktree, and an entry in the registry from minute one. Ask the coordinator: "start a Claude/Codex session for X".
 2. **An existing session joins.** Paste the join prompt below into it. It reads the guide, says hello, and from then on asks before production changes. Works for any agent on the same machine.
-3. **Another person's sessions, on their own machine.** They join through the GitHub coordination issue (paste the join prompt with the GitHub channel filled in). Don't run a second coordinator for the same production system; two coordinators means two sources of truth. If a teammate wants a coordinator for their own sessions, theirs handles local relaying and asks yours (through the issue) for every production slot.
+3. **Another person's sessions, on their own machine.** They join through the GitHub coordination issue (paste the join prompt with the GitHub channel filled in).
+
+## More than one machine (teammates with their own coordinator)
+Each person may want a coordinator for their own sessions, so it can start them, brief them and pass messages locally. That's fine, as long as only ONE coordinator grants production go-aheads for a given production system: the **primary**. The others are **local relays**:
+- A relay handles everything local: launching sessions, kickoffs, its registry, passing messages, answering "which session…".
+- For every production GO it asks the primary on the coordination issue, passing along the full request (what, PR, live state, rollback, verification). It relays the answer and posts the RELEASE back there.
+- The primary logs relay requests in its slot log like any other. One slot per service still holds across machines.
+- How a new coordinator finds out it's a relay: the repo's instruction files and the open coordination issue name the primary (setup step "announce yourself"). If both exist and point to someone else, become a relay and tell your owner why.
+- If the owners want to switch which one is primary, the old primary closes its open slots, posts a handover on the issue, and updates the instruction files.
 
 ## The join prompt
 

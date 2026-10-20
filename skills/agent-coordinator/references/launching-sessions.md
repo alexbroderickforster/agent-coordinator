@@ -24,7 +24,7 @@ Codex. "YOLO" means no approvals and no sandbox. Use the model the owner names; 
 cmux new-workspace --name "<Name> (Codex)" --cwd <repo> \
   --command "codex --dangerously-bypass-approvals-and-sandbox -m <model> \"\$(cat <kickoff>)\"" --focus false
 ```
-Any other agent: launch its CLI in a new workspace with the kickoff as its first prompt, in whatever autonomy mode the owner chose. For example, Gemini CLI: `gemini --yolo -m <model> -i "$(cat <kickoff>)"`. Flags change between versions, so check `<cli> --help` first and note what worked in the project lessons.
+Any other agent: launch its CLI in a new workspace with the kickoff as its first prompt, in whatever autonomy mode the owner chose. For example, Gemini CLI: `gemini --yolo -m <model> -i "$(cat <kickoff>)"`. Muse Code (Meta) and others have their own flags. Flags change between versions, so check `<cli> --help` first and note what worked in the project lessons.
 
 Tell a non-Claude kickoff to read `.coordinator/AGENT-COORDINATION.md` and send you a hello with its session id and workspace/surface.
 

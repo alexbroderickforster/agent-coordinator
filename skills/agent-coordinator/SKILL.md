@@ -1,6 +1,6 @@
 ---
 name: agent-coordinator
-description: Run (or take over) the agent coordinator, also called the deploy coordinator, for a team of parallel coding agents: Claude Code, Codex, Gemini CLI, or any agent that can run a shell command. The coordinator gives GO/HOLD on every production deploy, config change or data write; verifies releases independently; keeps the session registry and slot log; relays between sessions; and starts new sessions with kickoffs. Use when the user says "be the agent coordinator", "be the deploy coordinator", "start a new coordinator", "take over coordination", or asks to set up coordination for several agents working on one project.
+description: Run (or take over) the agent coordinator, also called the deploy coordinator, for a team of parallel coding agents: Claude Code, Codex, Gemini CLI, Muse Code, or any agent that can run a shell command. The coordinator gives GO/HOLD on every production deploy, config change or data write; verifies releases independently; keeps the session registry and slot log; relays between sessions; and starts new sessions with kickoffs. Use when the user says "be the agent coordinator", "be the deploy coordinator", "start a new coordinator", "take over coordination", or asks to set up coordination for several agents working on one project.
 ---
 
 # Agent coordinator
@@ -21,11 +21,21 @@ If you also keep agent memory, store pointers and hard rules there, and keep the
 
 ## Taking the role
 
-1. **Check for an existing coordinator.** Run `ListAgents`, read `.coordinator/AGENT-COORDINATION.md` and any memory notes. If one is alive, don't start a second: ask the owner whether you're replacing it. Two coordinators means two sources of truth.
-2. **Load state:** the slot log (find open slots: a GO without a matching RELEASED/CLOSED), the registry, project lessons and hard rules.
-3. **Announce yourself.** Put your name, terminal location (e.g. `cmux identify`) and session id in `AGENT-COORDINATION.md`. Tell the live sessions the coordinator moved.
+1. **Look for an existing coordinator, including on other machines.** Check all of these:
+   - `ListAgents` (sessions on this machine);
+   - `.coordinator/AGENT-COORDINATION.md` and any memory notes;
+   - the repo's instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) for an "agent coordinator" line;
+   - the git host for an open coordination issue: `gh issue list --search "agent coordination in:title" --state open`.
+
+   If a coordinator already covers this production system, don't become a second one. Tell the owner, and offer to be a **local relay** instead: you pass messages and run kickoffs for this machine's sessions, and ask the primary coordinator for every production GO (see connecting-sessions.md, "More than one machine"). Two coordinators granting GOs on the same system means two sources of truth.
+2. **First run? Set up** with `references/setup.md`. **Taking over?** Load the slot log (find open slots: a GO without a matching RELEASED/CLOSED), the registry, project lessons and hard rules.
+3. **Announce yourself.**
+   - Put your name, terminal location (e.g. `cmux identify`) and session id in `AGENT-COORDINATION.md`.
+   - Make sure the repo's instruction files point to you and the coordination issue, so agents on other machines can find you.
+   - Tell the live sessions where to reach you.
 4. **Start the watchers in the background:** `inbox-watch.sh` (mailbox and GitHub issue) and, if you can read the deploy audit log, `deploy-watch.sh`. Re-arm each whenever it exits.
 5. **Re-read production** for anything in flight (serving revision, tags, template, job images/env) and reconcile it with the log before granting anything new.
+6. **Brief the owner** using `references/owner-briefing.md`. Most owners install this plugin and expect you to explain how to use it. Keep it short and fill in their real names, paths and channels.
 
 ## The loop
 
@@ -40,6 +50,7 @@ For every incoming request:
 
 ## Reference files
 
+- `references/owner-briefing.md`: what to tell the owner after setup (how to use you, how to connect sessions, the join prompt filled in).
 - `references/setup.md`: first-run setup of `.coordinator/`, the mailbox and the multiplexer.
 - `references/connecting-sessions.md`: how every agent reaches you (same machine, other terminals, other machines), the join prompt, and the recommended setup. Read it when a session you didn't start appears, or when the owner asks how others should connect.
 - `references/gate-checklist.md`: checks before GO, at promote and at release. Read it before your first GO.

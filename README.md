@@ -65,12 +65,22 @@ Or from a shell: `claude plugin marketplace add alexbroderickforster/agent-coord
 
 Update later with `/plugin update agent-coordinator`.
 
+### If you're an AI agent and someone handed you this link
+
+1. Install it from the shell:
+   ```sh
+   claude plugin marketplace add alexbroderickforster/agent-coordinator
+   claude plugin install agent-coordinator@agent-coordinator
+   ```
+2. Tell your human that skills load at session start: open a **new** Claude Code session in the folder that holds their repos and say **"be the agent coordinator"**.
+3. That new session runs the skill. It checks whether a coordinator already exists for this production system (on this machine, in the repo's instruction files, or as an open coordination issue). It then either sets up or becomes a local relay, and briefs the human on how to use it.
+
 ## Quick start
 
 1. **Pick the coordinator session.** Open a Claude Code session in the folder that holds your repos and say:
    > Be the agent coordinator for this project.
 
-   On first run it creates `.coordinator/` (guide, slot log, registry, lessons, messaging scripts) and asks you about channels and permission mode. Give it **read** access to your deploy platform and git host. It doesn't need write access.
+   On first run it checks for an existing coordinator and creates `.coordinator/` (guide, slot log, registry, lessons, messaging scripts). Then it briefs you: how to start sessions through it, a ready-to-paste join prompt for sessions you start yourself, and the few choices only you can make (permission mode, what it can read). Give it **read** access to your deploy platform and git host. It doesn't need write access.
 2. **Connect your agents** (details below):
    - *New work:* ask the coordinator to "start a Claude/Codex session for X". It writes the kickoff and launches it.
    - *Sessions already running:* paste the join prompt into each one.
@@ -100,7 +110,7 @@ The coordinator runs `inbox-watch.sh` in the background, which wakes it for mail
 1. **Let the coordinator start sessions.** They get the rules, a worktree, and a registry entry from minute one.
 2. **For sessions someone else started, paste the join prompt:**
    > You're joining a team of agents coordinated by the agent coordinator "<name>". Read <path>/.coordinator/AGENT-COORDINATION.md now and follow it. Before ANY production deploy, traffic or config change, data write, customer-facing send, or production read beyond simple counts, ask the coordinator and wait for GO. Reach it with <channel>. Send it a hello now with your name, what you're working on, your session id, and how to reach you.
-3. **Teammates on other machines** join through the GitHub issue. Run **one** coordinator per production system; two coordinators means two sources of truth.
+3. **Teammates on other machines** join through the GitHub issue. If a teammate installs this too, their coordinator finds yours (through the repo's instruction files and the open coordination issue) and becomes a **local relay**: it starts and briefs their sessions, but asks yours for every production go-ahead. Only one coordinator grants go-aheads per production system, so there's one source of truth.
 
 ## What's inside
 
@@ -109,7 +119,8 @@ skills/agent-coordinator/
   SKILL.md                       the role, takeover steps, the request loop
   references/
     setup.md                     first run: .coordinator/, channels, permission mode, access
-    connecting-sessions.md       every channel, the join prompt, cross-machine setup
+    connecting-sessions.md       every channel, the join prompt, teammates and local relays
+    owner-briefing.md            what the coordinator tells you after setup
     gate-checklist.md            before GO, at promote, at release; jobs; data and sends
     cross-agent-comms.md         SendMessage, terminal typing quirks, mailbox, approval rules
     launching-sessions.md        kickoffs; launch commands for Claude Code and Codex; registry
@@ -135,7 +146,7 @@ skills/agent-coordinator/
 ## Requirements and assumptions
 
 - **Coordinator:** Claude Code. It relies on skills, `SendMessage` and background tasks.
-- **Agents it coordinates:** anything that can run a shell command, receive `SendMessage`, or post a GitHub comment. That includes Claude Code, Codex, Gemini CLI, Cursor's agent, Aider, Amp, OpenCode, Copilot CLI and Goose. Day to day it's been run with Claude Code and Codex; other agents use the same mailbox and GitHub channels. Put the coordination line in the instruction file each tool reads: `CLAUDE.md`, `AGENTS.md` (Codex, Cursor, Amp, OpenCode, Copilot…), or `GEMINI.md`.
+- **Agents it coordinates:** anything that can run a shell command, receive `SendMessage`, or post a GitHub comment. That includes Claude Code, Codex, Gemini CLI, Meta's Muse Code, Cursor's agent, Aider, Amp, OpenCode, Copilot CLI and Goose. Day to day it's been run with Claude Code and Codex; other agents use the same mailbox and GitHub channels. Put the coordination line in the instruction file each tool reads: `CLAUDE.md`, `AGENTS.md` (Codex, Cursor, Amp, OpenCode, Copilot…), or `GEMINI.md`.
 - `git` and `gh` (GitHub CLI) for merge checks and the cross-machine channel.
 - Read access to your deploy platform. The examples use Google Cloud Run (`gcloud`); the checks carry over to any platform with revisions, traffic and audit logs.
 - Optional: cmux to launch sessions into workspaces and type into terminals. Without it, use the file mailbox and launch sessions yourself.
