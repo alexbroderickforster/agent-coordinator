@@ -33,7 +33,7 @@ If you also keep agent memory, store pointers and hard rules there, and keep the
 3. **Announce yourself.**
    - Put your name, terminal location (e.g. `cmux identify`) and session id in `AGENT-COORDINATION.md`.
    - Tell the live sessions where to reach you.
-4. **Start the watchers in the background:** `inbox-watch.sh` (mailbox and GitHub issue) and, if you can read the deploy audit log, `deploy-watch.sh`. Re-arm each whenever it exits.
+4. **Start the watchers in the background:** `inbox-watch.sh` (mailbox and GitHub issue) and, if you can read the deploy audit log, `deploy-watch.sh`. Give each a background timeout longer than its own loop (about 100 minutes; e.g. `timeout: 7200000` in Claude Code), or the default 30-minute limit kills it silently. Re-arm each whenever it exits or is stopped.
 5. **Re-read production** for anything in flight (serving revision, tags, template, job images/env) and reconcile it with the log before granting anything new.
 6. **Brief the owner** using `references/owner-briefing.md`. Most owners install this plugin and expect you to explain how to use it. Keep it short and fill in their real names, paths and channels.
 
