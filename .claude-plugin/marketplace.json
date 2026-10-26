@@ -7,7 +7,7 @@
       "name": "agent-coordinator",
       "source": "./",
       "description": "One Claude Code session coordinates many parallel coding agents (Claude Code, Codex, Gemini CLI, Muse Code, any CLI agent): approves every production change, verifies releases, tracks sessions, relays messages, starts new sessions.",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "category": "productivity"
     }
   ]

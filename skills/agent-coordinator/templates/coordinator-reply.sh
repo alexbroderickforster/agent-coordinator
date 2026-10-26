@@ -83,8 +83,9 @@ if [ -z "$TARGET" ]; then
   echo "WARNING: no sessions.map entry for '${FROM:-unknown sender}'. The reply is only a file; the asker sees it only if it checks. Also send it via SendMessage (Claude Code) or cmux-say/cmux-deliver, and add the session to $MAP." >&2
   exit 0
 fi
-if "$HERE/cmux-deliver.sh" "$TARGET" "[$NAME] reply waiting for $ID: cat $REPLY"; then
-  echo "notified '$FROM' at $TARGET"
-else
-  echo "WARNING: notice to '$FROM' at $TARGET NOT confirmed. Reach it another way (SendMessage for Claude Code) and check the map entry." >&2
-fi
+RC=0; "$HERE/cmux-deliver.sh" "$TARGET" "[$NAME] reply waiting for $ID: cat $REPLY" || RC=$?
+case "$RC" in
+  0) echo "notified '$FROM' at $TARGET";;
+  3) echo "WARNING: NOT delivered: $TARGET (mapped for '$FROM') is a bare shell, not the agent. The reply file is written; reach the asker another way (SendMessage for Claude Code) and fix $MAP." >&2;;
+  *) echo "WARNING: notice to '$FROM' at $TARGET NOT confirmed. The reply file is written; reach the asker another way (SendMessage for Claude Code) and check the map entry." >&2;;
+esac

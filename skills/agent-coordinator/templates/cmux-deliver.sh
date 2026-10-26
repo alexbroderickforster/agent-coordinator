@@ -10,6 +10,9 @@
 #         above it as a sent message).
 # Exit 1: still unsent after the timeout; prints the screen tail. Follow up by
 #         hand or on another channel.
+# Exit 3: REFUSED, the target looks like a bare shell (text there would run as
+#         a command). Fix the sessions.map entry; CMUX_DELIVER_ALLOW_SHELL=1
+#         overrides.
 #
 # Why: a TUI treats fast-typed text as a paste. An Enter that lands while the
 # paste is settling becomes a newline, so the message sits unsent. A busy Codex
@@ -18,7 +21,7 @@
 # input box.
 # Env: CMUX_DELIVER_TIMEOUT (seconds, default 10).
 set -uo pipefail
-[ $# -ge 2 ] || { sed -n '2,12p' "$0" >&2; exit 2; }
+[ $# -ge 2 ] || { sed -n '2,15p' "$0" >&2; exit 2; }
 WS=$1; shift
 SF=""
 case "$WS" in */*) SF=${WS#*/}; WS=${WS%%/*};; esac
@@ -35,6 +38,20 @@ T=(--workspace "$WS"); [ -n "$SF" ] && T+=(--surface "$SF")
 export CMUX_QUIET=1
 screen() { cmux read-screen "${T[@]}" 2>/dev/null; }
 key() { cmux send-key "${T[@]}" "$1" >/dev/null 2>&1; }
+
+# Refuse to type into a bare shell: a message line there runs as a command.
+# An agent TUI shows a prompt glyph (› or ❯) or its status bar; a shell's last
+# non-blank line ends in "% " / "$ " / "# " with neither present.
+if [ -z "${CMUX_DELIVER_ALLOW_SHELL:-}" ]; then
+  pre=$(screen)
+  last=$(printf '%s\n' "$pre" | grep '[^[:space:]]' | tail -1)
+  if ! printf '%s\n' "$pre" | grep -qE '›|❯|esc to interrupt|bypass permissions|for shortcuts' \
+     && printf '%s' "$last" | grep -qE '[%$#][[:space:]]*$'; then
+    echo "cmux-deliver: REFUSED, the target looks like a bare shell prompt, not an agent:" >&2
+    printf '  %s\n' "$last" >&2
+    exit 3
+  fi
+fi
 squash() { tr -d '[:space:]'; }
 
 # The probe is the END of the text (ids and paths live there), whitespace
@@ -52,7 +69,7 @@ split_screen() {
     n=$(printf '%s\n' "$s" | grep -n '[^[:space:]]' | tail -4 | head -1 | cut -d: -f1)
     n=${n:-1}
   fi
-  ABOVE=$(printf '%s\n' "$s" | head -n $((n - 1)))
+  ABOVE=$( [ "${n:-1}" -gt 1 ] && printf '%s\n' "$s" | head -n $((n - 1)) )
   INPUT=$(printf '%s\n' "$s" | tail -n +"$n")
 }
 in_input() {  # is our text (or a paste placeholder) still in the input box?
