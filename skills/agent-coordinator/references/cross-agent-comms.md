@@ -9,13 +9,19 @@
 ## Claude Code → Codex, Gemini CLI or any other terminal agent
 - Only Claude Code sessions receive `SendMessage`. Type into its terminal with `templates/cmux-say.sh <workspace> <surface> "<text>"`.
 - Prefix every message with your role, e.g. `[coordinator] …`, so the agent knows it isn't the human.
-- **Enter timing.** A TUI treats fast-typed text as a paste. An Enter that arrives while the paste is settling becomes a newline, and the message sits unsent. The script waits 1 s + length/800 s (max 4 s), then sends a separate lowercase `enter`. If a message still sits in the input box, check with `cmux read-screen --workspace <ws> | tail` and send `cmux send-key … enter` again.
+- **Enter timing.** A TUI treats fast-typed text as a paste. An Enter that arrives while the paste is settling becomes a newline, and the message sits unsent. The script waits 1 s + length/800 s (max 4 s), then sends a separate lowercase `enter`.
+- **Verify submission.** Prefer `templates/cmux-deliver.sh <workspace>[/<surface>] "<text>"` for anything that matters (GOs, HOLDs, reply notices). After the Enter it polls `cmux read-screen`: if the text (or a `[Pasted Content…]` placeholder) is still in the input box it presses Enter again, or Tab when a busy Codex shows "tab to queue". It exits 0 only when the text has left the input box, else 1 with the screen tail.
 - Keep terminal messages under about 1,000 characters. Put long content on the git host (issue or PR comment) and send the link.
 
 ## Any agent, any terminal, same machine: the file mailbox
 - The agent runs `.coordinator/ask-coordinator.sh --from "<name>" --wait 600 "<msg>"`. It writes an atomic file into `.coordinator/mail/inbox/` and waits for the reply.
-- `inbox-watch.sh`, running in the background, wakes you with the message. Answer with `coordinator-reply.sh <id> "<text>"`; the waiting agent prints your reply.
+- `inbox-watch.sh`, running in the background, wakes you with the message. Answer with `coordinator-reply.sh <id> "<text>"`. An agent still blocked in `--wait` prints the reply. If it has stopped waiting (Claude Code sessions often do), the reply file alone goes unseen, so the script looks the sender up in `.coordinator/sessions.map` and pushes `[<you>] reply waiting for <id>: cat <path>` to its terminal with `cmux-deliver.sh`. No map entry, or delivery unconfirmed: it prints a WARNING. Then use another channel (SendMessage for Claude Code).
 - This needs no multiplexer, so it works from Ghostty, iTerm, VS Code or another tool's terminal. Prefer it for agents outside your cmux.
+
+## GO ledger: sent is not received
+- Every GO/HOLD gets an id and the peer answers `ACK <id>`. `coordinator-reply.sh --go <id> …` logs it and adds the ACK instruction to the reply. For other channels, use `go-ledger.sh add <id> <to> "<summary>"`.
+- ACKs in the mailbox or on the coordination issue are recorded automatically. Record ACKs from other channels with `go-ledger.sh ack <id>`.
+- `go-ledger.sh pending [--older-than MIN]` lists un-ACKed GOs. `inbox-watch.sh` prints `STALE-GO …` and wakes you when one is over 10 minutes old (`COORD_STALE_MIN`), and repeats every 30 minutes (`COORD_RENAG_MIN`) until it's ACKed or cancelled.
 
 ## Other machines: the GitHub coordination issue
 - Agents comment on one agreed issue, starting with `[<name>]`. Run the watcher with `COORD_GH_ISSUE=owner/repo#N` and reply in a comment.

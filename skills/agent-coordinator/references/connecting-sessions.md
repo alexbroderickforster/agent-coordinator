@@ -11,7 +11,7 @@ Any agent can join if it can do ONE of these: run a shell command (for the mailb
 |---|---|---|
 | Claude Code, same machine, any terminal or the Claude desktop app | `SendMessage` to the coordinator's name | `SendMessage` (find it with `ListAgents`) |
 | Codex or another CLI agent, inside the same multiplexer (cmux) | `cmux-say.sh` into the coordinator's terminal | `cmux-say.sh` into its terminal |
-| Any agent, same machine, any terminal (Ghostty, iTerm, VS Code, a different multiplexer) | `ask-coordinator.sh --from <name> --wait 600 "<msg>"` (file mailbox) | `coordinator-reply.sh <id> "<reply>"`; the agent's `--wait` prints it |
+| Any agent, same machine, any terminal (Ghostty, iTerm, VS Code, a different multiplexer) | `ask-coordinator.sh --from <name> --wait 600 "<msg>"` (file mailbox) | `coordinator-reply.sh <id> "<reply>"`; the agent's `--wait` prints it, else a notice is pushed to its terminal via `sessions.map` |
 | Any agent on ANOTHER machine (a teammate's laptop, CI, a cloud sandbox) | A comment on the team's coordination issue on GitHub | A reply comment on that issue |
 | Claude Code on another machine via Remote Control, or a cloud session | `SendMessage` works toward it; cloud sessions can't message back yet, so they use the GitHub issue | `SendMessage` |
 

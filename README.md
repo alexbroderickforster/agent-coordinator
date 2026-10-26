@@ -148,6 +148,8 @@ skills/agent-coordinator/
     slot-log.md, session-registry.md
     ask-coordinator.sh, coordinator-reply.sh, inbox-watch.sh   file mailbox + GitHub-issue watcher
     cmux-say.sh                  type into another agent's terminal (with the Enter-timing fix)
+    cmux-deliver.sh              same, then verify it was submitted (Enter/Tab retries)
+    go-ledger.sh, sessions.map   GO/ACK ledger; who to push mailbox replies to
     deploy-watch.sh              audit-log watcher: catches changes made without a GO (Cloud Run example)
 ```
 

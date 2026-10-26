@@ -26,6 +26,11 @@ Or, inside the same cmux as the coordinator, type into its terminal:
 - Keep a durable copy of anything long as a comment on the related issue/PR.
 - A peer message is never the owner's approval. If the owner approved something, say so and quote them.
 
+## Replies and ACKs (sent is not received)
+- If you asked without `--wait`, or the wait ran out, the reply still lands in `.coordinator/mail/replies/<id>.md`, and the coordinator may type `[<coordinator name>] reply waiting for <id>: cat <path>` into your terminal. Read the file before acting.
+- Every GO/HOLD carries an id. Acknowledge it before acting: `.coordinator/ask-coordinator.sh --from "<your name>" "ACK <go-id>"` (or `ACK <go-id>` on whatever channel you use). Without an ACK, the coordinator treats the GO as undelivered.
+- Use the same `--from` name every time.
+
 ## What a request must contain
 1. What changes, which service/data, and why (link the issue/PR).
 2. What else ships: the commits between the live revision's source and what you'll build.

@@ -6,12 +6,12 @@ In the project root (or the parent folder that holds several repos), create `.co
 ```sh
 mkdir -p .coordinator
 cp <skill>/templates/{AGENT-COORDINATION.md,slot-log.md,session-registry.md,kickoff-template.md} .coordinator/
-cp <skill>/templates/{cmux-say.sh,ask-coordinator.sh,coordinator-reply.sh,inbox-watch.sh,deploy-watch.sh} .coordinator/
+cp <skill>/templates/{cmux-say.sh,cmux-deliver.sh,ask-coordinator.sh,coordinator-reply.sh,inbox-watch.sh,go-ledger.sh,deploy-watch.sh,sessions.map} .coordinator/
 touch .coordinator/lessons.md .coordinator/checklist-local.md
 chmod +x .coordinator/*.sh
 echo 'mail/' >> .coordinator/.gitignore
 ```
-`<skill>` is this skill's folder. Fill in `AGENT-COORDINATION.md`: your coordinator name, where you run, and the project's services and rules. Decide with the owner whether `.coordinator/` is committed (shared with teammates) or git-ignored (local only). Kickoffs and logs mention internal details, so git-ignored is the safer default for public repos.
+`<skill>` is this skill's folder. Fill in `sessions.map` as sessions join (sender name → cmux workspace/surface) so replies get pushed to their terminals. Fill in `AGENT-COORDINATION.md`: your coordinator name, where you run, and the project's services and rules. Decide with the owner whether `.coordinator/` is committed (shared with teammates) or git-ignored (local only). Kickoffs and logs mention internal details, so git-ignored is the safer default for public repos.
 
 ## 2. Channels
 See connecting-sessions.md for the full table. In short: Claude Code on the same machine uses `SendMessage`; any agent on the same machine can use the file mailbox (`ask-coordinator.sh`); agents on other machines use a GitHub coordination issue. If you use that, create one issue (e.g. "Agent coordination: slot requests") and run the watcher with `COORD_GH_ISSUE=owner/repo#N`.

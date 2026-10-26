@@ -1,0 +1,12 @@
+# Who to notify when coordinator-reply.sh answers a mailbox message.
+# Format: <name as used in ask-coordinator.sh --from><TAB><cmux workspace:N[/surface:M]>
+# Matching: exact name (case-insensitive), else the longest entry that is a
+# prefix of the sender's name followed by a space or "(",
+# e.g. "billing-fix" matches "billing-fix (a1b2c3d4)".
+# Sessions cmux can't reach (e.g. desktop apps): leave them out and reply with
+# SendMessage as well. Update this file when a session moves or closes.
+# Optional: your name in notices ("[<name>] reply waiting for ...").
+@coordinator	coordinator
+# Examples (TAB-separated):
+# billing-fix (Codex)	workspace:12/surface:40
+# docs-refresh	workspace:15
