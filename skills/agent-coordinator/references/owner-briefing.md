@@ -13,5 +13,6 @@ Cover:
 7. **Choices only they can make:** the permission mode for sessions you start (skip permissions or not), whether `.coordinator/` is committed or local, and which production accounts you get READ access to.
 8. **Staying current:** if they haven't, suggest turning on auto-update for this plugin's marketplace (`/plugin` → Marketplaces → Enable auto-update). Third-party plugins don't auto-update by default.
 9. **How to pick you up again:** your session name and resume command, and that a new session can take over by saying "be the agent coordinator", because all the state is in `.coordinator/`.
+10. **After a restart:** if the terminal app quits or updates, they reopen it and tell you; you bring every agent back on its own conversation and check each one.
 
 End by asking for the one or two choices from item 7 that you still need.

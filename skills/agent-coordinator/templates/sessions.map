@@ -1,5 +1,7 @@
 # Who to notify when coordinator-reply.sh answers a mailbox message.
-# Format: <name as used in ask-coordinator.sh --from><TAB><cmux workspace:N[/surface:M]>
+# Format: <name as used in ask-coordinator.sh --from><TAB><cmux workspace[/surface]>
+# Prefer UUIDs (cmux tree --id-format uuids): they survive cmux restarts;
+# short refs (workspace:N/surface:M) renumber every time.
 # Matching: exact name (case-insensitive), else the longest entry that is a
 # prefix of the sender's name followed by a space or "(",
 # e.g. "billing-fix" matches "billing-fix (a1b2c3d4)".
@@ -8,5 +10,5 @@
 # Optional: your name in notices ("[<name>] reply waiting for ...").
 @coordinator	coordinator
 # Examples (TAB-separated):
-# billing-fix (Codex)	workspace:12/surface:40
+# billing-fix (Codex)	1F0C2A9E-0000-4000-8000-00000000AAAA/7B3D5E11-0000-4000-8000-00000000BBBB
 # docs-refresh	workspace:15
