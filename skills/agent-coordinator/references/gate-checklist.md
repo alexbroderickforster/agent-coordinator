@@ -27,6 +27,7 @@ Agents grade their own work too kindly. For a PR that needs it, give no merge GO
 - [ ] Verdict BLOCK: no GO; send the findings to the author. PASS-WITH-NITS: the author fixes them or says why not. PASS: log it.
 - [ ] Log the verdict with the GO (`go-ledger.sh add ... "judge: PASS (codex)"`). Posting it on the PR is optional and outward-facing.
 - [ ] A new head commit after the verdict needs a fresh judge if it changes non-test code.
+- [ ] PRs that change process-wide caches, locks or other concurrency need a cold-start concurrency test before merge: a fresh process on production-like CPU limits, many concurrent requests at cold caches, every request answered. Review and single-instance probes miss carrier-pinning hangs (lesson: virtual threads plus `synchronized` around blocking work froze a 1-vCPU instance).
 
 ## Before GO on a deploy / stage
 - [ ] The PR is MERGED and its commit is on `origin/main` (`gh pr view N --json state,mergeCommit`; `git branch -r --contains <sha>`).

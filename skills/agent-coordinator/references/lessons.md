@@ -40,3 +40,6 @@ An IAM grant to a person's address succeeded but bound a different user, because
 
 ## Verify private files by counts, never rows
 Checking a results file "to see its shape" printed real names and emails into the coordinator's transcript. When verifying anything holding personal data, print counts or tallies of status columns only.
+
+## Review and probes don't catch concurrency hangs
+A cache change passed an independent review and every single-instance probe, then froze production when a second autoscaled instance cold-started. Virtual threads that block inside a `synchronized` section pin their carrier; on a 1-vCPU instance that means every request. For lock or cache changes, require a cold-start concurrency test, and before promote, hit the new revision's tag URL with concurrent requests while it's still cold. Never point load at the live hostname: make scripts refuse it. After a traffic-only rollback the service template may still point at the bad revision, so every later deploy names its image explicitly.

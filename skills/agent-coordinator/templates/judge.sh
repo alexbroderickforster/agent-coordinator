@@ -25,6 +25,8 @@ RISK_RE='(email|mail|slack|privacy|consent|stripe|billing|checkout|payment|price
 die() { echo "judge: $*" >&2; exit 1; }
 [ $# -ge 2 ] || die "usage: judge.sh scope|packet|codex <PR> [OUT]"
 cmd=$1 pr=$2 out=${3:-}
+# resolve OUT before changing directory
+case $out in ""|/*) ;; *) out="$PWD/$out" ;; esac
 cd "$REPO_DIR"
 
 meta() { gh pr view "$pr" --json number,title,headRefOid,baseRefName,additions,deletions,files,closingIssuesReferences,state; }
