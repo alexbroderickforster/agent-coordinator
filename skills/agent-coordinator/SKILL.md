@@ -70,7 +70,7 @@ Sent is not received. A reply file nobody reads, or a message left sitting unsub
 - `references/worktree-cleanup.md`: removing stale worktrees safely (backups of uncommitted work, weekly sweep).
 - `references/self-improvement.md`: the learning loop: triggers, local files, upstream proposals, consolidation.
 - `references/lessons.md`: general incident log. Every rule exists because something went wrong.
-- `templates/`: messaging (`cmux-say.sh`, `cmux-deliver.sh`, `ask-coordinator.sh`, `coordinator-reply.sh`, `inbox-watch.sh`, `sessions.map`), the GO ledger (`go-ledger.sh`), `deploy-watch.sh`, `restore-agents.py` (resume every agent pane after a restart), and the `.coordinator/` files (`AGENT-COORDINATION.md`, `kickoff-template.md`, `slot-log.md`, `session-registry.md`).
+- `templates/`: messaging (`cmux-say.sh`, `cmux-deliver.sh`, `ask-coordinator.sh`, `coordinator-reply.sh`, `inbox-watch.sh`, `sessions.map`), the GO ledger (`go-ledger.sh`), the merge judge (`judge.sh`: scope a PR, build a spec+diff packet, run a Codex review), `deploy-watch.sh`, `restore-agents.py` (resume every agent pane after a restart), and the `.coordinator/` files (`AGENT-COORDINATION.md`, `kickoff-template.md`, `slot-log.md`, `session-registry.md`).
 
 ## Self-improvement (standing duty)
 

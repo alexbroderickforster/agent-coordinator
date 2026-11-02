@@ -8,6 +8,7 @@
 
 ## Claude Code → Codex, Gemini CLI or any other terminal agent
 - Only Claude Code sessions receive `SendMessage`. Type into its terminal with `templates/cmux-say.sh <workspace> <surface> "<text>"`.
+- `codex queue --thread <id> --message <text>` (Codex 0.166+) only reaches sessions attached to Codex's shared app-server daemon. A Codex TUI started normally in a terminal pane isn't attached and won't see it, so keep typing into the pane and keep the ACK loop. Check with `codex agents` before relying on it.
 - Prefix every message with your role, e.g. `[coordinator] …`, so the agent knows it isn't the human.
 - **Enter timing.** A TUI treats fast-typed text as a paste. An Enter that arrives while the paste is settling becomes a newline, and the message sits unsent. The script waits 1 s + length/800 s (max 4 s), then sends a separate lowercase `enter`.
 - **Verify submission.** Prefer `templates/cmux-deliver.sh <workspace>[/<surface>] "<text>"` for anything that matters (GOs, HOLDs, reply notices). After the Enter it polls `cmux read-screen`: if the text (or a `[Pasted Content…]` placeholder) is still in the input box it presses Enter again, or Tab when a busy Codex shows "tab to queue". It exits 0 only when the text has left the input box, else 1 with the screen tail. It refuses (exit 3) when the target looks like a bare shell prompt rather than an agent, because text typed into a shell runs as a command; `CMUX_DELIVER_ALLOW_SHELL=1` overrides.

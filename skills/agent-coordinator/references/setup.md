@@ -6,7 +6,7 @@ In the project root (or the parent folder that holds several repos), create `.co
 ```sh
 mkdir -p .coordinator
 cp <skill>/templates/{AGENT-COORDINATION.md,slot-log.md,session-registry.md,kickoff-template.md} .coordinator/
-cp <skill>/templates/{cmux-say.sh,cmux-deliver.sh,ask-coordinator.sh,coordinator-reply.sh,inbox-watch.sh,go-ledger.sh,deploy-watch.sh,restore-agents.py,sessions.map} .coordinator/
+cp <skill>/templates/{cmux-say.sh,cmux-deliver.sh,ask-coordinator.sh,coordinator-reply.sh,inbox-watch.sh,go-ledger.sh,judge.sh,deploy-watch.sh,restore-agents.py,sessions.map} .coordinator/
 touch .coordinator/lessons.md .coordinator/checklist-local.md
 chmod +x .coordinator/*.sh .coordinator/*.py
 echo 'mail/' >> .coordinator/.gitignore

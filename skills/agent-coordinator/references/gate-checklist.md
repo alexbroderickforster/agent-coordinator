@@ -15,7 +15,18 @@ A guard added to the repo doesn't protect checkouts that predate it. Server-side
 2. What else ships: commits between the live revision's source and the build (`git log <live-sha>..<new-sha> -- <service path>`).
 3. Current live state and the rollback (revision name, image digest or flag value).
 4. Verification plan: smoke tests, counts, before/after diff.
+5. For a merge: which agent wrote it (Claude or Codex), so the judge comes from the other vendor.
 If any is missing, ask; don't guess.
+
+## Before GO on a merge: independent judge
+Agents grade their own work too kindly. For a PR that needs it, give no merge GO until a judge from the OTHER vendor has read it (Claude-authored PR -> Codex judge; Codex-authored PR -> Claude judge).
+- [ ] `judge.sh scope <PR>`. REQUIRED when the PR touches money, auth/access/grants, email or Slack sends, privacy, DB migrations, or deploy config, or changes more than 500 lines. Docs-only PRs are exempt. Otherwise the judge is optional.
+- [ ] Know the author's vendor: PRs all carry the owner's login, so ask the requester or look it up in `sessions.map`; never guess from the author field.
+- [ ] The judge gets the spec (linked issues) and the diff, **never the author's PR description or summary**: `judge.sh packet <PR>`.
+- [ ] Codex judge: `judge.sh codex <PR>` (read-only sandbox on a throwaway worktree of the PR head; about 1-3 minutes). Claude judge: hand the packet to a review-model subagent inside the coordinator session. Don't use `claude -p` if an API key is in the environment: it bills the API.
+- [ ] Verdict BLOCK: no GO; send the findings to the author. PASS-WITH-NITS: the author fixes them or says why not. PASS: log it.
+- [ ] Log the verdict with the GO (`go-ledger.sh add ... "judge: PASS (codex)"`). Posting it on the PR is optional and outward-facing.
+- [ ] A new head commit after the verdict needs a fresh judge if it changes non-test code.
 
 ## Before GO on a deploy / stage
 - [ ] The PR is MERGED and its commit is on `origin/main` (`gh pr view N --json state,mergeCommit`; `git branch -r --contains <sha>`).

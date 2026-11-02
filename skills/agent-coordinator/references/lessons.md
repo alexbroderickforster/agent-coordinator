@@ -31,3 +31,12 @@ Each lesson comes from a real incident while coordinating about 15 parallel Clau
 - The terminal app restarted for an update. Claude Code panes came back on their own conversations, but every Codex pane came back as a bare shell, the app's own restore command refused them, and the owner thought the history was lost. Several Claude panes also compacted straight away, which looked like lost history too → after any restart the coordinator restores every pane from the app's saved bindings (restore-agents.py), reads each screen to confirm it's that pane's own conversation, re-maps sessions.map, and explains compaction. Snapshot the bindings whenever the watcher is re-armed.
 - After the restart, short pane refs had renumbered, so terminal notices would have gone to the wrong panes → sessions.map uses the multiplexer's UUIDs, which survive restarts.
 - A dozen restored sessions each started the same heavy MCP server at once and froze the laptop for minutes → before a mass restore, look for per-session MCP servers nobody uses and suggest disabling them.
+
+## The author grades its own work too kindly
+A PR's own author (and its summary) is the weakest check. For PRs touching money, auth or access, sends, privacy, migrations or deploy config, or more than 500 lines, give no merge GO until a judge from the other vendor has read the spec and the diff, without the author's description (`judge.sh`). `codex review --base` refuses a custom prompt, so the Codex judge is `codex exec -s read-only` on a throwaway worktree of the PR head.
+
+## A grant to an email address can land on someone else
+An IAM grant to a person's address succeeded but bound a different user, because the address was an alias on that user's account. After any grant to a person, read the policy back and check the member is exactly the address requested; if not, revert and stop.
+
+## Verify private files by counts, never rows
+Checking a results file "to see its shape" printed real names and emails into the coordinator's transcript. When verifying anything holding personal data, print counts or tallies of status columns only.

@@ -22,7 +22,7 @@ When the terminal app quits (an update, a crash, a reboot) every agent stops. Th
 2. **Verify each pane yourself.** Read every agent's screen. Its last message should be that pane's own work: title, repo and the last thing it reported. A pane that resumed the wrong conversation looks healthy, so this is the check that matters.
 3. **Panes with no binding** (an agent started before cmux's hooks were installed, or a pane cmux never recorded): find the session by its title in the transcripts (Claude Code writes a `custom-title` line), then resume it by hand with its usual flags. For Codex, ignore sessions whose first line says `source.subagent`. Those are helper threads that belong to another session, not panes.
 4. **Re-map.** Update `sessions.map` targets (prefer UUIDs) and the registry's location column. Test each target with `cmux read-screen`.
-5. **Re-arm your own watchers.**
+5. **Re-arm your own watchers, and check your own name.** A resumed session can come back under a generated name instead of the one peers address (`ListAgents` prints "This session is <name>"). Peers then can't find the coordinator by name. Ask the owner to run `/rename <coordinator name>` in your pane.
 6. **Brief stale agents.** An agent whose last message predates changes made while it was down (its PR shipped elsewhere, its slot closed) may act on old state. Send it a one-line update before it does.
 7. **Tell the owner** in plain words: who's back, anything that needed a manual fix, and anything still waiting on them.
 
