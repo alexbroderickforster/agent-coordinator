@@ -1,0 +1,61 @@
+# coordinator.conf: the project-specific settings for hooks/guard.sh and
+# judge.sh. Copy it to .coordinator/coordinator.conf and edit.
+#
+# Format: KEY='value', one per line. The file is READ, never executed: no
+# shell expansion, no inline comments, the last line for a key wins, and one
+# layer of '...' or "..." quotes is removed. Values that are regexes are
+# Python `re` syntax for the guard and grep -E syntax for judge.sh.
+# An empty or missing setting turns its rows off; it never matches everything.
+# After any change run: .coordinator/hooks/guard.sh --selftest
+
+# ---- guard.sh: live hosts -------------------------------------------------
+# Hosts that must never be burst, load-tested or crawled (space-separated).
+# Name every hostname real users reach. Preview/tag URLs and localhost are
+# deliberately NOT listed: that is where load and crawls belong.
+GUARD_LIVE_HOSTS='app.example.com www.example.com'
+
+# ---- guard.sh: commands whose output can hold secrets ---------------------
+# For a CLI whose "describe" output includes a signing key or similar. All
+# five are optional; leave them empty if nothing in your stack prints secrets
+# this way. The patterns are matched against the command after wrappers
+# (sudo, env, timeout ...) are stripped and the command name is basename'd.
+#
+# The CLI family (fields and debug flags are checked on these commands):
+GUARD_SECRET_CLI_RE=''
+# The describe command: denied unless EVERY --format is a safe field list
+# (a CLI honours the last --format, so one safe --format is not enough):
+GUARD_SECRET_DESCRIBE_RE=''
+# Field names that hold secrets; denied anywhere in a GUARD_SECRET_CLI_RE command:
+GUARD_SECRET_FIELDS_RE=''
+# The REST host of the same config: curl/wget -v / --trace to it is denied:
+GUARD_SECRET_API_HOST_RE=''
+# The config endpoint URL: any fetch of it is denied:
+GUARD_SECRET_REST_RE=''
+# Example, for an imaginary `idpctl` whose config holds a signing key:
+#   GUARD_SECRET_CLI_RE='^idpctl( |$)'
+#   GUARD_SECRET_DESCRIBE_RE='^idpctl( .*)? config( .*)? describe( |$)'
+#   GUARD_SECRET_FIELDS_RE='(signingKey|hashConfig|privateKey)'
+#   GUARD_SECRET_API_HOST_RE='idp\.example\.com'
+#   GUARD_SECRET_REST_RE='idp\.example\.com/[^ ]*[cC]onfig'
+# Defaults you can override:
+#   GUARD_SAFE_FORMAT_RE='(value|yaml)\([^)]+\)'
+#   GUARD_SECRET_DEBUG_RE='(--log-http|--verbosity[= ]debug|--debug)'
+
+# ---- judge.sh -------------------------------------------------------------
+# A clean checkout of the repo the PRs are in (default: the current directory):
+JUDGE_REPO_DIR=''
+# owner/repo for the dry-run status command (default: `gh repo view`):
+JUDGE_STATUS_REPO=''
+# Lines changed that always need a judge:
+JUDGE_LINES='500'
+# Env names the Codex judge must never inherit, space-separated (for example
+# an opt-in that lets local code reach production, or deploy tokens):
+JUDGE_UNSET_ENV=''
+# Paths whose change always needs a judge. Leave empty for the built-in list
+# (money, auth/access as a word or path segment, sends, privacy, sessions and
+# tokens, grants, migrations, deploy config). Setting it REPLACES that list.
+JUDGE_RISK_RE=''
+# Added code that always needs a judge (locks, caches, memoization,
+# transactions). Leave empty for the built-in multi-language list; setting it
+# REPLACES that list.
+JUDGE_CODE_RE=''

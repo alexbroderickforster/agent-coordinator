@@ -1,1 +1,1 @@
-id	to	status	sent_utc	sent_epoch	done_utc	nagged_epoch	summary
+id	to	status	sent_utc	sent_epoch	done_utc	nagged_epoch	summary	kind	service	action	artifact	expires_epoch	closed_utc	note

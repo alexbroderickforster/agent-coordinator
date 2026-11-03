@@ -21,6 +21,7 @@ Before moving on, append to:
 - `.coordinator/lessons.md`: `- YYYY-MM-DD: what happened → the rule.` One line, concrete, no blame.
 - `.coordinator/checklist-local.md`, if it's a check: the item, written as a checklist line, under the right heading (before GO / at promote / at release / jobs / comms).
 - the project's copy of a script, if the fix belongs in it. Record what you changed in lessons.md.
+- **a ratchet**, whenever the lesson can be checked mechanically: a test, lint rule, guard row or CI check that fails on the old behaviour. If none is possible, write the one-line reason why. "We'll remember" is not a ratchet (ratchets.md).
 Mention it to the owner in one line ("Added a rule: …"). Don't ask permission for local notes; ask before changing anything that affects other agents' behaviour, such as AGENT-COORDINATION.md or kickoff rules.
 
 At the start of every session, read `lessons.md` and `checklist-local.md`. They override the generic checklist where they're stricter.
@@ -38,7 +39,7 @@ When a lesson would help any project, not just this one:
 
 ## Consolidation (keep it small)
 Every few weeks, or when `lessons.md` passes about 30 lines:
-- fold lessons that repeat a rule into one checklist line;
+- fold lessons that repeat a rule into one checklist line, and a lesson that recurred twice into a mechanical check;
 - remove lessons made obsolete by a platform or process change, noting why in one line;
 - tell the owner what changed.
 A long list nobody reads protects nothing.

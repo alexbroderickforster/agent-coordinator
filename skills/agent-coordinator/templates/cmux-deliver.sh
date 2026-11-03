@@ -6,6 +6,12 @@
 #   e.g. cmux-deliver.sh workspace:43 "[coordinator] reply waiting ..."
 #        cmux-deliver.sh workspace:43/surface:187 "..."
 #        cmux-deliver.sh workspace:43 surface:187 "..."
+#        cmux-deliver.sh workspace:43 - <<'EOF'
+#        text with `backticks`, $(...) or "quotes", typed literally
+#        EOF
+# "-" (as the only text argument) reads the text from stdin. Quote the heredoc
+# word ('EOF'); an unquoted EOF still runs `...` and $(...) in the shell.
+# Newlines become spaces either way (one line only).
 # Exit 0: submitted (the input box no longer holds the text, or the text shows
 #         above it as a sent message).
 # Exit 1: still unsent after the timeout; prints the screen tail. Follow up by
@@ -21,7 +27,7 @@
 # input box.
 # Env: CMUX_DELIVER_TIMEOUT (seconds, default 10).
 set -uo pipefail
-[ $# -ge 2 ] || { sed -n '2,15p' "$0" >&2; exit 2; }
+[ $# -ge 2 ] || { sed -n '2,21p' "$0" >&2; exit 2; }
 WS=$1; shift
 SF=""
 case "$WS" in */*) SF=${WS#*/}; WS=${WS%%/*};; esac
@@ -30,7 +36,18 @@ if [ -z "$SF" ] && [ $# -ge 2 ] && [[ $1 =~ ^(surface:[0-9]+|[0-9A-Fa-f]{8}-[0-9
 fi
 # one line only: a newline would submit early; cmux send also turns the
 # two-character sequences \n \r \t into keys, so neutralise those too
-TEXT=$(printf '%s' "$*" | tr '\r\n' '  ' | sed -E 's/\\([nrt])/\/\1/g')
+if [ $# -eq 1 ] && [ "$1" = "-" ]; then
+  [ ! -t 0 ] || { echo "cmux-deliver: '-' reads the text from stdin; use a quoted <<'EOF' heredoc" >&2; exit 2; }
+  SIN=$(mktemp "${TMPDIR:-/tmp}/coord-deliver.XXXXXX") || { echo "cmux-deliver: cannot create a temp file" >&2; exit 2; }
+  cat > "$SIN"
+  if ! LC_ALL=C tr -d '\000' < "$SIN" | cmp -s - "$SIN"; then
+    rm -f "$SIN"; echo "cmux-deliver: stdin holds a NUL byte; refusing" >&2; exit 2
+  fi
+  RAW=$(cat "$SIN"; printf x); RAW=${RAW%x}; RAW=${RAW%$'\n'}; rm -f "$SIN"
+else
+  RAW="$*"
+fi
+TEXT=$(printf '%s' "$RAW" | tr '\r\n' '  ' | sed -E 's/\\([nrt])/\/\1/g')
 [ -n "$TEXT" ] || { echo "cmux-deliver: empty text" >&2; exit 2; }
 TIMEOUT=${CMUX_DELIVER_TIMEOUT:-10}
 

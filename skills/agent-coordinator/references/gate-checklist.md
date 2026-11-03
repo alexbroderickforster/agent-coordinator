@@ -20,11 +20,15 @@ If any is missing, ask; don't guess.
 
 ## Before GO on a merge: independent judge
 Agents grade their own work too kindly. For a PR that needs it, give no merge GO until a judge from the OTHER vendor has read it (Claude-authored PR -> Codex judge; Codex-authored PR -> Claude judge).
-- [ ] `judge.sh scope <PR>`. REQUIRED when the PR touches money, auth/access/grants, email or Slack sends, privacy, DB migrations, or deploy config, or changes more than 500 lines. Docs-only PRs are exempt. Otherwise the judge is optional.
+- [ ] `judge.sh scope <PR>`. REQUIRED when the PR touches money, auth/access/grants, email or Slack sends, privacy, DB migrations, or deploy config, changes more than 500 lines, or ADDS lock, cache, memoization or transaction code anywhere (a path-only rule never sees a lock added to an ordinary file). Docs-only PRs are exempt. Otherwise the judge is optional. Tune the patterns in `coordinator.conf` (`JUDGE_RISK_RE`, `JUDGE_CODE_RE`); auth, order and access match only as a word or path segment.
 - [ ] Know the author's vendor: PRs all carry the owner's login, so ask the requester or look it up in `sessions.map`; never guess from the author field.
 - [ ] The judge gets the spec (linked issues) and the diff, **never the author's PR description or summary**: `judge.sh packet <PR>`.
 - [ ] Codex judge: `judge.sh codex <PR>` (read-only sandbox on a throwaway worktree of the PR head; about 1-3 minutes). Claude judge: hand the packet to a review-model subagent inside the coordinator session. Don't use `claude -p` if an API key is in the environment: it bills the API.
+- [ ] Check every verdict strictly: `judge.sh verdict <PR> <file>` (exit 0 PASS / PASS-WITH-NITS, 1 BLOCK, 2 HOLD). No single valid `VERDICT:` line, a failed Codex run, or a missing `PRIOR <n>: FIXED|UNFIXED` answer is a HOLD, not a pass. A PASS with a prior P1/P2 still UNFIXED is a HOLD.
+- [ ] Round 2 and later: `judge.sh packet` / `codex` put every finding not yet answered FIXED at the top of the next packet, round after round, so nothing drops out because a later round didn't mention it. Rounds are ordered by file name (`pr<N>-<vendor>-r<k>.md`), never by mtime.
 - [ ] Verdict BLOCK: no GO; send the findings to the author. PASS-WITH-NITS: the author fixes them or says why not. PASS: log it.
+- [ ] The fix for each accepted P1/P2 carries a ratchet (a test that fails on the old behaviour) or a written why-not (`ratchets.md`). Otherwise HOLD the merge GO.
+- [ ] Optional: `judge.sh status <PR> <file>` prints (never runs) the `gh api` command that posts the verdict as a commit status on the exact head SHA. Enforce it through your merge GO rather than branch protection, so the owner is never blocked.
 - [ ] Log the verdict with the GO (`go-ledger.sh add ... "judge: PASS (codex)"`). Posting it on the PR is optional and outward-facing.
 - [ ] A new head commit after the verdict needs a fresh judge if it changes non-test code.
 - [ ] PRs that change process-wide caches, locks or other concurrency need a cold-start concurrency test before merge: a fresh process on production-like CPU limits, many concurrent requests at cold caches, every request answered. Review and single-instance probes miss carrier-pinning hangs (lesson: virtual threads plus `synchronized` around blocking work froze a 1-vCPU instance).

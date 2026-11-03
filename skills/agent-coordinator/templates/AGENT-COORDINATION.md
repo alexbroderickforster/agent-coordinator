@@ -16,11 +16,17 @@ Claude Code sessions on this machine use `SendMessage` to "<coordinator name>". 
 
 Every other agent on this machine (Codex, Gemini CLI, Cursor, Aider…) uses the mailbox. It works in any terminal:
 
-    .coordinator/ask-coordinator.sh --from "<your name>" --wait 600 "<message>"
+    .coordinator/ask-coordinator.sh --from "<your name>" --wait 600 - <<'EOF'
+    <message, any characters, any number of lines>
+    EOF
 
 Or, inside the same cmux as the coordinator, type into its terminal:
 
-    .coordinator/cmux-say.sh workspace:<n> surface:<n> "[AGENT <your name> (<tool>) <session-id> @ workspace:<n>/surface:<n>] <message>"
+    .coordinator/cmux-say.sh workspace:<n> surface:<n> - <<'EOF'
+    [AGENT <your name> (<tool>) <session-id> @ workspace:<n>/surface:<n>] <message>
+    EOF
+
+- Pass `-` and a QUOTED heredoc (`<<'EOF'`, with the quotes) whenever the text has backticks, `$( )`, quotes or more than one line. Inside double quotes, or after an unquoted `<<EOF`, the shell runs backticks and `$( )` before the script sees them. Short plain texts (`"ACK GO-x"`) can stay as one quoted argument.
 
 - ALWAYS start with the bracketed prefix and your own workspace/surface (`cmux identify`), so the coordinator knows you're a peer, not the owner, and can reply to you.
 - Keep a durable copy of anything long as a comment on the related issue/PR.

@@ -51,6 +51,8 @@ What's specific to this plugin:
 - **Relays between agents.** Claude ↔ Claude through `SendMessage`; Claude ↔ Codex through the terminal or a file mailbox; other machines through a GitHub issue.
 - **Starts new sessions properly.** It writes a kickoff (task, settled decisions, rules, how to reach the coordinator), launches Claude Code or Codex in its own workspace, and registers it.
 - **Improves itself.** When something goes wrong, it adds a rule to the project's own lessons and checklist that same turn, and every future coordinator session reads them. Lessons that would help everyone are drafted as scrubbed PRs or issues to this repo, posted only with your OK.
+- **Turns mistakes into ratchets.** A finding closes only with a test, lint or check that fails on the old behaviour, or a written reason why none is possible. For big changes it runs a cross-vendor consensus review: two independent reviewers who never see each other's output, then the coordinator decides what they disagree on.
+- **Trips on known mistakes (optional).** A Claude Code `PreToolUse` hook refuses a short list of commands that caused incidents: pattern kills on a shared machine, bursts and crawls against your live hosts, shell-expanded message text, replace-all env flags. It's a tripwire for honest mistakes, not a sandbox, and it fails open loudly.
 
 ## Install
 
@@ -141,6 +143,9 @@ skills/agent-coordinator/
     cross-agent-comms.md         SendMessage, terminal typing quirks, mailbox, approval rules
     launching-sessions.md        kickoffs; launch commands for Claude Code and Codex; registry
     self-improvement.md          the learning loop: triggers, local rules, upstream PRs
+    ratchets.md                  every mistake becomes a check; the proposed post-merge QA loop
+    consensus-review.md          two independent cross-vendor reviewers, then the coordinator decides
+    guard-hook.md                the optional Bash guard: threat model, config, safe install
     lessons.md                   the incident log behind every rule
   templates/
     AGENT-COORDINATION.md        the guide every other agent reads
@@ -149,8 +154,12 @@ skills/agent-coordinator/
     ask-coordinator.sh, coordinator-reply.sh, inbox-watch.sh   file mailbox + GitHub-issue watcher
     cmux-say.sh                  type into another agent's terminal (with the Enter-timing fix)
     cmux-deliver.sh              same, then verify it was submitted (Enter/Tab retries)
-    go-ledger.sh, sessions.map   GO/ACK ledger; who to push mailbox replies to
+    go-ledger.sh, sessions.map   typed GO ledger (ACK, check, consume, revoke); who to push replies to
+    judge.sh                     merge judge: scope, spec+diff packet, carried findings, strict verdicts
+    hooks/guard.sh               PreToolUse Bash tripwire (+ guard_parse.py, settings-snippet.json)
+    coordinator.conf.example     project settings: live hosts, secret-bearing commands, judge patterns
     deploy-watch.sh              audit-log watcher: catches changes made without a GO (Cloud Run example)
+tests/run.sh                     tests for the scripts (temp dirs and fake binaries; no network)
 ```
 
 ## A few rules it enforces, and why
@@ -176,10 +185,11 @@ skills/agent-coordinator/
 - The coordinator is a process, not a sandbox. It can't stop an agent that never asks, such as a teammate's agent, an old checkout or a CI job. Pair it with guards in the deploy path itself: deploy only from CI on merged main, a freshness check in deploy scripts, a build stamp plus monitoring. `gate-checklist.md` has the list. The audit-log watcher catches changes made without a GO, and the line in CLAUDE.md/AGENTS.md makes the rule hard to miss.
 - Starting sessions with `--dangerously-skip-permissions` / Codex's bypass flag is your call. It removes per-command prompts, and safety then rests on the GO process and each kickoff's rules. `setup.md` covers the trade-off.
 - Keep secrets and personal data out of terminal messages, mailbox files and GitHub comments. The skill tells agents to report counts only.
+- The guard hook is optional and Claude Code only. Install it by appending to your existing `PreToolUse` hooks, with a backup first and `guard.sh --selftest` after (`references/guard-hook.md`).
 
 ## Contributing
 
-Your coordinator will offer to send improvements here itself (scrubbed, with your OK). Or by hand: found a new failure mode? Open a PR that adds one line to `references/lessons.md` (what happened → the rule) and, if it's a new check, a line in `gate-checklist.md`. Keep project-specific details out.
+Your coordinator will offer to send improvements here itself (scrubbed, with your OK). Or by hand: found a new failure mode? Open a PR that adds one line to `references/lessons.md` (what happened → the rule) and, if it's a new check, a line in `gate-checklist.md`. Changes to the scripts need a case in `tests/run.sh` that fails without the change; run `tests/run.sh` before sending. Keep project-specific details out.
 
 ## License
 
