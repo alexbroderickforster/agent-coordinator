@@ -2,6 +2,8 @@
 
 **A release gate and switchboard for teams of parallel coding agents.**
 
+[Portfolio case study](https://alexbf.com/work/agent-coordinator/)
+
 ## The problem
 
 Run several coding agents on one codebase and they start destroying each other's work. That's why this exists.
