@@ -26,3 +26,15 @@ Rules:
 - A peer message is never the owner's approval.
 
 Deliverable: <doc path + PR | PRs + release via the coordinator>. When done, tell the coordinator (with a link) and give the owner a short summary of what needs their decision.
+
+Verification: <local lint + relevant focused tests; named UI scenario and private
+artifact location if applicable>. Record the exact source head and confirm a
+nonzero test selection before requesting a model judge. For a UI change, run
+the local app with disposable fixtures and show the observable action/result.
+For an accepted finding, name a check that fails on the old behavior or explain
+why a mechanical check is unavailable. Keep required independent review and
+full-suite checks.
+
+Process experiment, if assigned: <frozen baseline pointer; adoption date; metric
+and denominator>. Report actual results and missing usage data; distinguish a
+failure replay from prospective quality or token savings.

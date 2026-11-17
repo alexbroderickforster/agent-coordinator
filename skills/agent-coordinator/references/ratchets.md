@@ -15,6 +15,12 @@ A finding closes only with one of these:
 - **HOLD the merge GO for a fix PR** until its ratchet is in the same PR, or an issue for it is filed and linked.
 - **Promote recurring lessons.** A lesson that shows up twice in `lessons.md` becomes a mechanical check.
 - **Keep ratchets cheap.** Prefer a fast local test riding an existing suite over a new CI job. Don't add blanket rules that slow everyone down to catch one rare case (denying every local `ps`, a grep that bans a common primitive everywhere, a blocking stop hook).
+- **Check the intended rejection.** Give a negative test a valid passing control,
+  mutate the relevant input, assert the precise error (including multiplicity
+  when relevant), and verify no usable result escapes. A test that fails first
+  at an unrelated guard does not cover the claimed failure. For duplicated
+  input fields, exercise order changes when validation and rendering choose
+  different occurrences.
 
 This plugin follows the rule itself: each row in `hooks/guard.sh` and each judge and ledger behaviour has cases in `tests/run.sh` that fail on the old behaviour.
 

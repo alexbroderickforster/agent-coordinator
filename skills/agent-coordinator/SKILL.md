@@ -71,6 +71,7 @@ Sent is not received. A reply file nobody reads, or a message left sitting unsub
 - `references/worktree-cleanup.md`: removing stale worktrees safely (backups of uncommitted work, weekly sweep).
 - `references/self-improvement.md`: the learning loop: triggers, local files, upstream proposals, consolidation.
 - `references/ratchets.md`: every mistake becomes a ratchet (a check that fails on the old behaviour, or a written why-not); optional duplicate detection; the proposed post-merge QA loop.
+- `references/verification-evidence.md`: local feature artifacts, bounded property-testing trials, checks before model review, and baseline/after measurements. Read when adopting verification tools or changing review costs.
 - `references/consensus-review.md`: two independent reviewers from different vendors, then the coordinator decides. For plans, gates and risky scripts.
 - `references/guard-hook.md`: the optional PreToolUse Bash guard: threat model, `coordinator.conf`, the two-step install, appending to existing hooks safely, selftest, rollback.
 - `references/lessons.md`: general incident log. Every rule exists because something went wrong.
@@ -91,3 +92,8 @@ You improve yourself in two layers. Details in `references/self-improvement.md`.
 **Every mistake becomes a ratchet.** A finding (judge P1/P2, QA finding, incident, accepted lesson) closes only with a test, lint, hook row or check that fails on the old behaviour, or a one-line written reason why none is possible. Name it when you close: `ratchet: <file>::<test>`. HOLD the merge GO for a fix PR until its ratchet is in the PR or filed as a linked issue. Details in `references/ratchets.md`.
 
 Every few weeks, or when `lessons.md` passes about 30 lines, consolidate: fold repeated lessons into `checklist-local.md`, drop stale ones, and tell the owner what changed.
+
+When changing the review process, freeze a baseline first and track the effect
+with its denominator and missing data. A successful failure replay supports a
+check; it does not by itself prove fewer escaped bugs or lower model cost. Use
+`references/verification-evidence.md` for the evidence and measurement fields.
