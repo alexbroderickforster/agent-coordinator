@@ -59,3 +59,14 @@ JUDGE_RISK_RE=''
 # transactions). Leave empty for the built-in multi-language list; setting it
 # REPLACES that list.
 JUDGE_CODE_RE=''
+
+# Optional local-evidence gate. Default off; enabling it refuses Codex calls
+# until a coordinator-controlled checker validates the exact fetched PR head.
+JUDGE_PREFLIGHT_REQUIRED='0'
+# Absolute path OUTSIDE the reviewed checkout to a reviewed standalone Python
+# checker, its SHA256, and the independently approved profile-file SHA256:
+JUDGE_PREFLIGHT_CHECKER=''
+JUDGE_PREFLIGHT_CHECKER_SHA256=''
+JUDGE_PREFLIGHT_PROFILES_SHA256=''
+# Private per-head receipt (usually supplied in the invocation environment):
+JUDGE_PREFLIGHT_RECEIPT=''
