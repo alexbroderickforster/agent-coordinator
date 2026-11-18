@@ -29,7 +29,8 @@ export COORD_DIR="$T/coord"
 mkdir -p "$COORD_DIR" "$T/bin" "$T/out" "$T/orig" || setup_fail "mkdir under $T"
 case "$(cd "$COORD_DIR" && pwd -P)/" in "$(cd "$REPO" && pwd -P)/"*) setup_fail "COORD_DIR is inside the repo";; esac
 unset COORD_SESSIONS_MAP COORD_NAME COORD_GH_ISSUE COORD_GO_TTL_MIN COORD_LOCK_TEST_HOLD_SEC COORD_LOCK_WAIT_SEC \
-      REPO_DIR JUDGE_REPO_DIR JUDGE_OUT JUDGE_LINES JUDGE_STATUS_REPO JUDGE_RISK_RE JUDGE_CODE_RE JUDGE_UNSET_ENV GUARD_BUDGET_SEC
+      REPO_DIR JUDGE_REPO_DIR JUDGE_OUT JUDGE_LINES JUDGE_STATUS_REPO JUDGE_RISK_RE JUDGE_CODE_RE JUDGE_UNSET_ENV GUARD_BUDGET_SEC \
+      JUDGE_PREFLIGHT_REQUIRED JUDGE_PREFLIGHT_CHECKER JUDGE_PREFLIGHT_CHECKER_SHA256 JUDGE_PREFLIGHT_PROFILES_SHA256 JUDGE_PREFLIGHT_RECEIPT
 # the project config every guard and judge test runs with
 export GUARD_CONF="$T/coordinator.conf" COORD_CONF="$T/coordinator.conf"
 cat > "$GUARD_CONF" <<'EOF' || setup_fail "write $T/coordinator.conf"
@@ -800,6 +801,10 @@ case "$1 $2" in
   "fetch -q") exit 0;;
   "worktree add") mkdir -p "${@: -2:1}";;
   "worktree remove") d="${@: -1}"; case "$d" in "$FAKE_TMP"/*) rm -rf "$d";; esac;;
+  "rev-parse HEAD") echo "${FAKE_GIT_HEAD:-0123456789abcdef0123456789abcdef01234567}";;
+  "merge-base "*) echo 1111111111111111111111111111111111111111;;
+  "diff "*) printf '%s\n' "${FAKE_GIT_DIFF:-diff --git a/src/x.clj b/src/x.clj}"; echo '+(defn x [] 1)';;
+  "status --porcelain") [ -z "${FAKE_WORKTREE_DIRTY:-}" ] || echo ' M generated-file'; exit 0;;
   "rev-parse --verify") exit 1;;
   *) exit 0;;
 esac
@@ -1583,6 +1588,85 @@ run env PATH="$JP" TMPDIR="$T/tmp" PROD_OPTIN=1 COORD_CONF="$T/unset.conf" FAKE_
 has "JUDGE_UNSET_ENV: the Codex judge never inherits the opt-in" "optin=unset" "$(cat "$T/out/codex.env" 2>/dev/null)"
 run env PATH="$JP" TMPDIR="$T/tmp" PROD_OPTIN=1 COORD_CONF="$T/empty-judge.conf" FAKE_CODEX_ENV="$T/out/codex.env" FAKE_CODEX_OUTPUT='VERDICT: PASS' "$J" codex 999 "$T/out/unset2.md" --no-prior
 has "without JUDGE_UNSET_ENV the variable passes through (the test can tell)" "optin=1" "$(cat "$T/out/codex.env" 2>/dev/null)"
+
+# ---------------------------------------------------------------------------
+section "judge.sh: optional trusted local preflight gate"
+CHECKER="$T/trusted checker.py"
+cat > "$CHECKER" <<'PYCODE'
+import json,os,pathlib,sys
+args=sys.argv
+if os.environ.get('FAKE_GATE_REQUIRE_SCRUB')=='1':
+ assert 'PROD_OPTIN' not in os.environ and 'OTHER_TOKEN' not in os.environ
+if os.environ.get('FAKE_GATE_MODE')=='fail': raise SystemExit(2)
+if os.environ.get('FAKE_GATE_MODE')=='bad-json': print('invalid summary'); raise SystemExit(0)
+receipt=json.loads(pathlib.Path(args[args.index('--receipt')+1]).read_text())
+sha=args[args.index('--sha')+1]
+assert receipt['passed'] is True and receipt['head']==sha
+assert args[1]=='--repo' and args[3]=='check'
+assert args[args.index('--approved-profiles-sha256')+1]=='a'*64
+print(json.dumps({'head':sha,'passed':True,'profile':'fixture','steps':[{'kind':'focused-test','returncode':0,'tests':1,'seconds':0.01}]}))
+PYCODE
+CHECKER_HASH=$(shasum -a 256 "$CHECKER" | cut -d' ' -f1)
+PROFILE_HASH=$(printf 'a%.0s' {1..64})
+printf '{"head":"%s","passed":true,"raw_log":"RAW_LOG_MUST_STAY_PRIVATE"}\n' "$HEAD_SHA" > "$T/gate-receipt.json"
+cat > "$T/gate.conf" <<EOFCONF
+JUDGE_PREFLIGHT_REQUIRED='1'
+JUDGE_PREFLIGHT_CHECKER='$CHECKER'
+JUDGE_PREFLIGHT_CHECKER_SHA256='$CHECKER_HASH'
+JUDGE_PREFLIGHT_PROFILES_SHA256='$PROFILE_HASH'
+JUDGE_PREFLIGHT_RECEIPT='$T/gate-receipt.json'
+EOFCONF
+mkdir -p "$T/gate-out"
+rm -f "$T/gate-prompt"
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" FAKE_CODEX_PROMPT="$T/gate-prompt" FAKE_CODEX_OUTPUT='VERDICT: PASS' "$J" codex 999 --no-prior
+check_rc "enabled valid gate invokes fake judge" 0 "$RC" "$OUT"
+has "validated summary reaches prompt" "Validated local preflight" "$(cat "$T/gate-prompt" 2>/dev/null)"
+hasnt "raw logs stay out of prompt" "RAW_LOG_MUST_STAY_PRIVATE" "$(cat "$T/gate-prompt" 2>/dev/null)"
+for mode in fail bad-json; do
+  rm -f "$T/gate-prompt"
+  run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" FAKE_GATE_MODE="$mode" FAKE_CODEX_PROMPT="$T/gate-prompt" "$J" codex 999 --no-prior
+  check_rc "gate $mode refuses before model" 64 "$RC" "$OUT"
+  cond "gate $mode made zero fake model calls" '[ ! -e "$T/gate-prompt" ]'
+done
+rm -f "$T/gate-prompt"
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" JUDGE_PREFLIGHT_CHECKER_SHA256="$PROFILE_HASH" FAKE_CODEX_PROMPT="$T/gate-prompt" "$J" codex 999 --no-prior
+check_rc "unapproved checker bytes refuse" 64 "$RC" "$OUT"
+cond "checker mismatch made zero model calls" '[ ! -e "$T/gate-prompt" ]'
+printf '{"head":"0000000000000000000000000000000000000000","passed":true}\n' > "$T/gate-receipt.json"
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" FAKE_CODEX_PROMPT="$T/gate-prompt" "$J" codex 999 --no-prior
+check_rc "stale receipt refuses actual fetched head" 64 "$RC" "$OUT"
+cond "stale receipt made zero model calls" '[ ! -e "$T/gate-prompt" ]'
+printf '{"head":"%s","passed":true}\n' "$HEAD_SHA" > "$T/gate-receipt.json"
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" JUDGE_PREFLIGHT_CHECKER='relative/head-checker.py' FAKE_CODEX_PROMPT="$T/gate-prompt" "$J" codex 999 --no-prior
+check_rc "head-relative checker is refused" 64 "$RC" "$OUT"
+cond "head-relative checker made zero model calls" '[ ! -e "$T/gate-prompt" ]'
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" JUDGE_PREFLIGHT_PROFILES_SHA256='bad-pin' FAKE_CODEX_PROMPT="$T/gate-prompt" "$J" codex 999 --no-prior
+check_rc "invalid profile pin is refused" 64 "$RC" "$OUT"
+cond "invalid profile pin made zero model calls" '[ ! -e "$T/gate-prompt" ]'
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" "$J" preflight 999
+check_rc "standalone preflight supports another-vendor handoff" 0 "$RC" "$OUT"
+cond "standalone preflight makes zero model calls" '[ ! -e "$T/gate-prompt" ]'
+rm -f "$T/gate-prompt"
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" FAKE_CODEX_PROMPT="$T/gate-prompt" FAKE_CODEX_OUTPUT='VERDICT: PASS' FAKE_GIT_DIFF='PINNED_HEAD_DIFF' FAKE_GH_DIFF='NEW_LIVE_HEAD_DIFF' "$J" codex 999 --no-prior
+check_rc "gate packet uses pinned Git diff" 0 "$RC" "$OUT"
+has "pinned diff reaches model" 'PINNED_HEAD_DIFF' "$(cat "$T/gate-prompt" 2>/dev/null)"
+hasnt "moving live diff never reaches model" 'NEW_LIVE_HEAD_DIFF' "$(cat "$T/gate-prompt" 2>/dev/null)"
+run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" JUDGE_UNSET_ENV='PROD_OPTIN OTHER_TOKEN' PROD_OPTIN=1 OTHER_TOKEN=private-fixture FAKE_GATE_REQUIRE_SCRUB=1 FAKE_CODEX_PROMPT="$T/gate-prompt" FAKE_CODEX_OUTPUT='VERDICT: PASS' "$J" codex 999 --no-prior
+check_rc "checker actually receives configured env removals" 0 "$RC" "$OUT"
+for defect in dirty moved-head; do
+  rm -f "$T/gate-prompt"
+  if [ "$defect" = dirty ]; then export FAKE_WORKTREE_DIRTY=1
+  else export FAKE_GIT_HEAD=2222222222222222222222222222222222222222; fi
+  run env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/gate-out" FAKE_CODEX_PROMPT="$T/gate-prompt" "$J" codex 999 --no-prior
+  check_rc "post-check $defect refuses" 64 "$RC" "$OUT"
+  cond "post-check $defect made zero model calls" '[ ! -e "$T/gate-prompt" ]'
+  unset FAKE_WORKTREE_DIRTY FAKE_GIT_HEAD
+done
+OUT=$(umask 000; env PATH="$JP" TMPDIR="$T/tmp" COORD_CONF="$T/gate.conf" JUDGE_OUT="$T/private-gate-dir" "$J" preflight 999 2>&1); RC=$?
+check_rc "standalone gate creates a private audit directory" 0 "$RC" "$OUT"
+cond "audit directory mode is0700 despite permissive caller umask" '[ "$(python3 -c "import os,sys; print(oct(os.stat(sys.argv[1]).st_mode & 0o777))" "$T/private-gate-dir")" = 0o700 ]'
+has "audit distinguishes blocked and allowed validations" '"result": "BLOCK"' "$(cat "$T/gate-out/preflight-events.jsonl")"
+has "audit records standalone check separately" '"mode": "preflight"' "$(cat "$T/gate-out/preflight-events.jsonl")"
 
 # ---------------------------------------------------------------------------
 section "isolation"

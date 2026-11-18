@@ -71,6 +71,7 @@ Sent is not received. A reply file nobody reads, or a message left sitting unsub
 - `references/worktree-cleanup.md`: removing stale worktrees safely (backups of uncommitted work, weekly sweep).
 - `references/self-improvement.md`: the learning loop: triggers, local files, upstream proposals, consolidation.
 - `references/ratchets.md`: every mistake becomes a ratchet (a check that fails on the old behaviour, or a written why-not); optional duplicate detection; the proposed post-merge QA loop.
+- `references/preflight-gate.md`: optional trusted checker/profile pins, exact-head validation before a model call, and private refusal metrics. Read before enabling the gate.
 - `references/verification-evidence.md`: local feature artifacts, bounded property-testing trials, checks before model review, and baseline/after measurements. Read when adopting verification tools or changing review costs.
 - `references/consensus-review.md`: two independent reviewers from different vendors, then the coordinator decides. For plans, gates and risky scripts.
 - `references/guard-hook.md`: the optional PreToolUse Bash guard: threat model, `coordinator.conf`, the two-step install, appending to existing hooks safely, selftest, rollback.

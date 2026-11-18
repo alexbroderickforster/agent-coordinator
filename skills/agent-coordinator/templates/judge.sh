@@ -6,6 +6,7 @@
 # Usage:
 #   judge.sh scope   <PR>                 does this PR need a judge? (prints REQUIRED/OPTIONAL + why)
 #   judge.sh packet  <PR> [OUT] [PRIOR]   write the judge packet (spec + diff, no PR body)
+#   judge.sh preflight <PR>             validate configured evidence, no model call
 #   judge.sh codex   <PR> [OUT] [PRIOR]   Claude-authored PR: run `codex exec` on it
 #                                         in a throwaway worktree; verdict saved to OUT
 #                                         (default pr<PR>-codex.md, or the next free
@@ -74,6 +75,11 @@ JUDGE_LINES=$(setting JUDGE_LINES 500)
 OUTDIR=$(setting JUDGE_OUT "$HERE/reports/judge")
 STATUS_REPO=$(setting JUDGE_STATUS_REPO "")
 UNSET_ENV=$(setting JUDGE_UNSET_ENV "")
+PREFLIGHT_REQUIRED=$(setting JUDGE_PREFLIGHT_REQUIRED 0)
+PREFLIGHT_CHECKER=$(setting JUDGE_PREFLIGHT_CHECKER "")
+PREFLIGHT_CHECKER_SHA256=$(setting JUDGE_PREFLIGHT_CHECKER_SHA256 "")
+PREFLIGHT_PROFILES_SHA256=$(setting JUDGE_PREFLIGHT_PROFILES_SHA256 "")
+PREFLIGHT_RECEIPT=$(setting JUDGE_PREFLIGHT_RECEIPT "")
 # added CODE that always needs a judge: locks, caches, memoization, delays,
 # transaction nesting. Review and single-instance probes miss concurrency
 # hangs, and a path-only rule never sees a lock added to an ordinary file.
@@ -87,7 +93,7 @@ RISK_RE=$(setting JUDGE_RISK_RE "(email|mail|slack|privacy|consent|billing|check
 
 die() { echo "judge: $*" >&2; exit 64; }
 abspath() { case $1 in ""|/*) printf '%s' "$1" ;; *) printf '%s' "$PWD/$1" ;; esac; }
-[ $# -ge 2 ] || die "usage: judge.sh scope|packet|codex|verdict|status <PR> [FILE] [options]"
+[ $# -ge 2 ] || die "usage: judge.sh scope|packet|preflight|codex|verdict|status <PR> [FILE] [options]"
 cmd=$1 pr=$2; shift 2
 out="" ROUND="" PRIOR="" NOPRIOR=0 SHA_ARG="" CONTEXT="" PACKET_ARG=""
 while [ $# -gt 0 ]; do
@@ -415,8 +421,8 @@ jpy() { python3 -I -c "$JPY" "$@"; }
 looks_like_verdict() { [ -f "$1" ] && grep -Eqi '^[[:space:]>#*_`-]*VERDICT[[:space:]]*:' "$1"; }
 
 packet() {
-  local f=${1:-$OUTDIR/pr$pr-packet.md} pf block="" ctx
-  mkdir -p "$(dirname "$f")"; umask 077
+  local f=${1:-$OUTDIR/pr$pr-packet.md} pf block="" ctx pinned_base=${2:-} pinned_sha=${3:-} pinned_tree=${4:-}
+  umask 077; mkdir -p "$(dirname "$f")"
   pf=$(resolve_prior)
   if [ -n "$pf" ]; then
     ctx=$(ctx_of_verdict "$pf")
@@ -456,7 +462,13 @@ packet() {
     for n in $(meta | python3 -c 'import json,sys; [print(i["number"]) for i in json.load(sys.stdin).get("closingIssuesReferences") or []]'); do
       echo; echo "### Issue #$n"; gh issue view "$n" --json title,body --jq '"**" + .title + "**\n\n" + .body'
     done
-    echo; echo "## Diff"; echo '```diff'; gh pr diff "$pr"; echo '```'
+    echo; echo "## Diff"; echo '```diff'
+    if [ -n "$pinned_sha" ]; then
+      git -C "$pinned_tree" diff "$pinned_base" "$pinned_sha" --
+    else
+      gh pr diff "$pr"
+    fi
+    echo '```'
   } > "$f"
   echo "packet: $f ($(wc -l < "$f") lines${pf:+; outstanding findings after $(basename "$pf")})"
 }
@@ -468,23 +480,120 @@ next_codex_out() {
   printf '%s' "$OUTDIR/pr$pr-codex-r$k.md"
 }
 
+# A checker is trusted coordinator code, outside the head under review. Execute
+# the bytes whose hash was checked, preserving __file__ for trusted profiles.
+checked_preflight() {
+  local v CHECKER_UNSETS=()
+  for v in $UNSET_ENV; do [[ $v =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && CHECKER_UNSETS+=(-u "$v"); done
+  env ${CHECKER_UNSETS[@]+"${CHECKER_UNSETS[@]}"} python3 -I - "$PREFLIGHT_CHECKER" "$PREFLIGHT_CHECKER_SHA256" "$PREFLIGHT_PROFILES_SHA256" "$PREFLIGHT_RECEIPT" "$1" "$2" <<'PYCODE'
+import hashlib, pathlib, re, signal, sys
+checker, expected, profiles, receipt, sha, worktree = sys.argv[1:]
+try:
+    if not all(re.fullmatch(r"[0-9a-f]{64}", h) for h in [expected, profiles]):
+        raise ValueError("configure trusted checker and profile SHA256 pins")
+    path = pathlib.Path(checker)
+    if not path.is_absolute() or path.resolve().is_relative_to(pathlib.Path(worktree).resolve()):
+        raise ValueError("checker must be an absolute trusted path outside the reviewed checkout")
+    path = path.resolve()
+    source = path.read_bytes()
+    if hashlib.sha256(source).hexdigest() != expected:
+        raise ValueError("trusted checker changed; review and repin before running")
+    if not receipt:
+        raise ValueError("local lint/focused-test receipt required")
+    def timeout(*_):
+        raise TimeoutError("receipt validation exceeded 30 seconds")
+    signal.signal(signal.SIGALRM, timeout); signal.alarm(30)
+    sys.argv = [str(path), "--repo", worktree, "check", "--receipt", receipt,
+                "--sha", sha, "--approved-profiles-sha256", profiles]
+    exec(compile(source, str(path), "exec"), {"__name__": "__main__", "__file__": str(path), "__package__": None})
+except Exception as error:
+    print("judge preflight: " + str(error), file=sys.stderr)
+    sys.exit(2)
+PYCODE
+}
+
+preflight_event() {
+  umask 077; mkdir -p "$OUTDIR"
+  python3 -I - "$OUTDIR/preflight-events.jsonl" "$pr" "$1" "$2" "$cmd" <<'PYCODE'
+import datetime, fcntl, json, sys
+path, pr, sha, result, mode = sys.argv[1:]
+with open(path, "a") as stream:
+    fcntl.flock(stream, fcntl.LOCK_EX)
+    stream.write(json.dumps({"utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "pr": pr, "head": sha, "mode": mode, "result": result, "model_invoked": False}) + "\n")
+PYCODE
+}
+
+preflight_for_head() {
+  local summary status actual_head
+  if summary=$(checked_preflight "$1" "$2") && summary=$(printf '%s' "$summary" | python3 -I -c '
+import json,sys
+try:
+    value=json.load(sys.stdin)
+    assert isinstance(value,dict) and value.get("passed") is True and value.get("head")==sys.argv[1]
+    safe={k:value[k] for k in ["head","passed","profile"] if k in value}
+    safe["steps"]=[{k:s[k] for k in ["kind","returncode","tests","seconds"] if k in s} for s in value.get("steps",[])]
+    print(json.dumps(safe))
+except Exception:
+    print("judge preflight: checker must return a passing JSON summary for the fetched PR head",file=sys.stderr)
+    sys.exit(2)
+' "$1"); then
+    status=$(git -C "$2" status --porcelain --untracked-files=all --ignored) || {
+      preflight_event "$1" BLOCK; die "cannot verify post-check worktree status";
+    }
+    actual_head=$(git -C "$2" rev-parse HEAD) || {
+      preflight_event "$1" BLOCK; die "cannot verify post-check HEAD";
+    }
+    if [ -n "$status" ] || [ "$actual_head" != "$1" ]; then
+      preflight_event "$1" BLOCK
+      die "checker changed the reviewed checkout; use read-only receipt validation"
+    fi
+    preflight_event "$1" PASS
+    printf '%s\n' "$summary"
+  else
+    preflight_event "$1" BLOCK
+    die "preflight refused; fix local checks or approved configuration before model review"
+  fi
+}
+
+prepare_review_head() {
+  REVIEW_SHA=$(meta | python3 -c 'import json,sys; print(json.load(sys.stdin)["headRefOid"])')
+  REVIEW_BASE=$(meta | python3 -c 'import json,sys; print(json.load(sys.stdin)["baseRefName"])')
+  git fetch -q origin "$REVIEW_BASE" "pull/$pr/head"
+  JUDGE_WT=$(mktemp -d "${TMPDIR:-/tmp}/judge-pr$pr-XXXX"); rmdir "$JUDGE_WT"
+  trap 'git -C "$REPO_DIR" worktree remove --force "$JUDGE_WT" >/dev/null 2>&1 || true' EXIT
+  git worktree add -q --detach "$JUDGE_WT" "$REVIEW_SHA"
+  REVIEW_MERGE_BASE=$(git -C "$JUDGE_WT" merge-base "origin/$REVIEW_BASE" "$REVIEW_SHA")
+  [ -n "$REVIEW_MERGE_BASE" ] || die "cannot pin the review merge base"
+}
+
+preflight_command() {
+  [ "$PREFLIGHT_REQUIRED" = 1 ] || die "preflight gate is not enabled for this project"
+  prepare_review_head
+  preflight_for_head "$REVIEW_SHA" "$JUDGE_WT"
+}
+
 codex_review() {
-  local f=${1:-} sha base rc=0 res vrc=0 pkt
+  local f=${1:-} sha base rc=0 res vrc=0 pkt preflight=""
   if [ -n "$f" ]; then
     [ ! -e "$f" ] || die "OUT $f already exists; a verdict file is never overwritten (omit OUT for the next free -r<k> name)"
   else
     f=$(next_codex_out)
   fi
-  mkdir -p "$(dirname "$f")"; umask 077
+  umask 077; mkdir -p "$(dirname "$f")"
   EXCLUDE=$f
-  sha=$(meta | python3 -c 'import json,sys; print(json.load(sys.stdin)["headRefOid"])')
-  base=$(meta | python3 -c 'import json,sys; print(json.load(sys.stdin)["baseRefName"])')
-  git fetch -q origin "$base" "pull/$pr/head"
-  JUDGE_WT=$(mktemp -d "${TMPDIR:-/tmp}/judge-pr$pr-XXXX"); rmdir "$JUDGE_WT"
-  git worktree add -q --detach "$JUDGE_WT" "$sha"
-  trap 'git -C "$REPO_DIR" worktree remove --force "$JUDGE_WT" >/dev/null 2>&1 || true' EXIT
+  prepare_review_head
+  sha=$REVIEW_SHA base=$REVIEW_BASE
+  case $PREFLIGHT_REQUIRED in
+    0) ;;
+    1) preflight=$(preflight_for_head "$sha" "$JUDGE_WT") || return $? ;;
+    *) die "JUDGE_PREFLIGHT_REQUIRED must be 0 or 1" ;;
+  esac
   pkt="$OUTDIR/pr$pr-packet.md"
-  packet "$pkt" >/dev/null
+  packet "$pkt" "$REVIEW_MERGE_BASE" "$sha" "$JUDGE_WT" >/dev/null
+  if [ -n "$preflight" ]; then
+    { echo; echo "## Validated local preflight (summary only)"; printf '%s\n' "$preflight"; } >> "$pkt"
+  fi
   save_ctx "$pkt" "$f.ctx" || die "could not save the packet as $f.ctx; not running the judge"   # the exact packet this verdict answers
   # JUDGE_UNSET_ENV: names the judge must never inherit (opt-ins that let a
   # process reach production, tokens it has no use for)
@@ -492,7 +601,7 @@ codex_review() {
   for v in $UNSET_ENV; do [[ $v =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && UNSETS+=(-u "$v"); done
   # `codex review --base` refuses a custom prompt, so the judge is `codex exec`
   # in a read-only sandbox on the PR head, fed the packet (spec + diff).
-  { echo "The PR's code is checked out in your working directory (base: origin/$base). Read any file you need; change nothing."
+  { echo "The PR's code is checked out at $sha. Compare ONLY with merge base $REVIEW_MERGE_BASE (git diff $REVIEW_MERGE_BASE $sha), matching the pinned Diff below. Read any file you need; change nothing."
     echo; cat "$f.ctx"; } \
     | env ${UNSETS[@]+"${UNSETS[@]}"} codex exec -s read-only --ephemeral -C "$JUDGE_WT" -o "$f" - > "$f.log" 2>&1 || rc=$?
   echo "codex verdict for #$pr ($sha): $f (log $f.log)"
@@ -620,6 +729,7 @@ case $cmd in
   scope) cd "$REPO_DIR"; scope ;;
   packet) [ -z "$out" ] || ! looks_like_verdict "$out" || die "OUT $out holds a VERDICT line; refusing to overwrite a verdict file with a packet"
           cd "$REPO_DIR"; EXCLUDE=$out; packet "$out" ;;
+  preflight) cd "$REPO_DIR"; preflight_command ;;
   codex) cd "$REPO_DIR"; codex_review "$out" ;;
   verdict) verdict_cmd ;;
   status) status_cmd ;;
